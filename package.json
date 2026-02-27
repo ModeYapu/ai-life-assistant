@@ -8,7 +8,9 @@
     "start": "react-native start",
     "test": "jest",
     "lint": "eslint .",
-    "type-check": "tsc --noEmit"
+    "type-check": "tsc --noEmit",
+    "android:clean": "cd android && gradlew clean && cd ..",
+    "start:android": "npm start"
   },
   "dependencies": {
     "@react-navigation/native": "^6.1.9",
