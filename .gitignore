@@ -4,6 +4,7 @@ package-lock.json
 
 # Build
 android/app/build/
+android/.gradle/
 ios/build/
 dist/
 
