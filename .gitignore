@@ -33,6 +33,7 @@ yarn-error.log*
 # Testing
 coverage/
 .nyc_output/
+android/.gradle-detox/
 
 # Misc
 *.bak
