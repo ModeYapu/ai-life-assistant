@@ -131,7 +131,7 @@ export const SettingsScreen: React.FC = () => {
         <List.Item
           title="流式输出"
           description="实时显示AI回复"
-          left={(props) => <List.Icon {...props} icon="stream" />}
+          left={(props) => <List.Icon {...props} icon="swap-horizontal" />}
           right={() => (
             <Switch
               value={settings.ai.streamEnabled}
