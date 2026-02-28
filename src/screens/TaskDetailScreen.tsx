@@ -17,7 +17,6 @@ import {
   RadioButton,
   Chip,
   IconButton,
-  DateTimePicker,
 } from 'react-native-paper';
 import { useSelector, useDispatch } from 'react-redux';
 import { useNavigation, useRoute } from '@react-navigation/native';
@@ -41,7 +40,6 @@ export const TaskDetailScreen: React.FC = () => {
   const [priority, setPriority] = useState<TaskPriority>('medium');
   const [status, setStatus] = useState<TaskStatus>('pending');
   const [dueDate, setDueDate] = useState<number | undefined>();
-  const [showDatePicker, setShowDatePicker] = useState(false);
   const [tags, setTags] = useState<string[]>([]);
   const [newTag, setNewTag] = useState('');
 
@@ -179,25 +177,20 @@ export const TaskDetailScreen: React.FC = () => {
         <Text style={styles.label}>截止日期</Text>
         <TouchableOpacity
           style={styles.dateButton}
-          onPress={() => setShowDatePicker(true)}
+          onPress={() => {
+            // 简化版本：切换日期显示
+            if (dueDate) {
+              setDueDate(undefined);
+            } else {
+              setDueDate(Date.now() + 24 * 60 * 60 * 1000); // 默认明天
+            }
+          }}
         >
           <Text>
-            {dueDate ? format(dueDate, 'yyyy-MM-dd HH:mm') : '选择日期'}
+            {dueDate ? format(dueDate, 'yyyy-MM-dd HH:mm') : '点击设置截止日期（默认明天）'}
           </Text>
           <IconButton icon="calendar" />
         </TouchableOpacity>
-        {showDatePicker && (
-          <DateTimePicker
-            value={dueDate ? new Date(dueDate) : new Date()}
-            mode="datetime"
-            onChange={(event, date) => {
-              setShowDatePicker(false);
-              if (date) {
-                setDueDate(date.getTime());
-              }
-            }}
-          />
-        )}
         {dueDate && (
           <Button
             mode="text"
