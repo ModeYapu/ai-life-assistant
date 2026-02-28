@@ -21,7 +21,7 @@ import {
   TextInput,
   Divider,
 } from 'react-native-paper';
-import { unifiedMemorySystem } from '@/services/unifiedMemorySystem';
+import { unifiedMemorySystem } from '../services/unifiedMemorySystem';
 
 export const MemoryManagerScreen: React.FC = () => {
   const [stats, setStats] = useState<any>(null);

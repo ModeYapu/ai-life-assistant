@@ -3,7 +3,7 @@
  */
 
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { Task, AIConversation, User, AppSettings } from '@/types';
+import { Task, AIConversation, User, AppSettings } from '../types';
 
 class StorageService {
   // Keys

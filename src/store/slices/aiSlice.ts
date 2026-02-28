@@ -3,8 +3,8 @@
  */
 
 import { createSlice, createAsyncThunk, PayloadAction } from '@reduxjs/toolkit';
-import { AIState, AIMessage, AIConversation } from '@/types';
-import { aiService } from '@/services/aiService';
+import { AIState, AIMessage, AIConversation } from '../../types';
+import { aiService } from '../../services/aiService';
 import { v4 as uuidv4 } from 'uuid';
 
 const initialState: AIState = {

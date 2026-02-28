@@ -8,14 +8,14 @@ import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { createStackNavigator } from '@react-navigation/stack';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 
-import { RootStackParamList, MainTabParamList } from '@/types';
-import { HomeScreen } from '@/screens/HomeScreen';
-import { ChatScreen } from '@/screens/ChatScreen';
-import { TasksScreen } from '@/screens/TasksScreen';
-import { TaskDetailScreen } from '@/screens/TaskDetailScreen';
-import { SettingsScreen } from '@/screens/SettingsScreen';
-import { ProfileScreen } from '@/screens/ProfileScreen';
-import { MemoryManagerScreen } from '@/screens/MemoryManagerScreen';
+import { RootStackParamList, MainTabParamList } from '../types';
+import { HomeScreen } from '../screens/HomeScreen';
+import { ChatScreen } from '../screens/ChatScreen';
+import { TasksScreen } from '../screens/TasksScreen';
+import { TaskDetailScreen } from '../screens/TaskDetailScreen';
+import { SettingsScreen } from '../screens/SettingsScreen';
+import { ProfileScreen } from '../screens/ProfileScreen';
+import { MemoryManagerScreen } from '../screens/MemoryManagerScreen';
 
 const Stack = createStackNavigator<RootStackParamList>();
 const Tab = createBottomTabNavigator<MainTabParamList>();

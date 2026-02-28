@@ -14,9 +14,9 @@ import {
 } from 'react-native';
 import { IconButton, Text, Bubble } from 'react-native-paper';
 import { useSelector, useDispatch } from 'react-redux';
-import { RootState } from '@/store';
-import { sendMessage, createConversation } from '@/store/slices/aiSlice';
-import { AIMessage } from '@/types';
+import { RootState } from '../store';
+import { sendMessage, createConversation } from '../store/slices/aiSlice';
+import { AIMessage } from '../types';
 
 export const ChatScreen: React.FC = () => {
   const [inputText, setInputText] = useState('');

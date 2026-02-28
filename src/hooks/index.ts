@@ -5,10 +5,10 @@
 import { useEffect, useCallback, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { AppState, AppStateStatus } from 'react-native';
-import { RootState } from '@/store';
-import { loadTasks } from '@/store/slices/tasksSlice';
-import { loadUser } from '@/store/slices/userSlice';
-import { loadSettings } from '@/store/slices/settingsSlice';
+import { RootState } from '../store';
+import { loadTasks } from '../store/slices/tasksSlice';
+import { loadUser } from '../store/slices/userSlice';
+import { loadSettings } from '../store/slices/settingsSlice';
 
 /**
  * 应用初始化Hook

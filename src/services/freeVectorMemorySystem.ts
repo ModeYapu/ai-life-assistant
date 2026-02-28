@@ -3,7 +3,7 @@
  * 使用多种替代方案实现语义搜索
  */
 
-import { AIMessage } from '@/types';
+import { AIMessage } from '../types';
 
 interface MemoryItem {
   id: string;

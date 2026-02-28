@@ -20,8 +20,8 @@ import {
 } from 'react-native-paper';
 import { useSelector, useDispatch } from 'react-redux';
 import { useNavigation } from '@react-navigation/native';
-import { RootState } from '@/store';
-import { loadUser } from '@/store/slices/userSlice';
+import { RootState } from '../store';
+import { loadUser } from '../store/slices/userSlice';
 
 export const ProfileScreen: React.FC = () => {
   const navigation = useNavigation();

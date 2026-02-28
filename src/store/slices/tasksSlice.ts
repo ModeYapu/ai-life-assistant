@@ -3,8 +3,8 @@
  */
 
 import { createSlice, createAsyncThunk, PayloadAction } from '@reduxjs/toolkit';
-import { TasksState, Task, TaskFilter } from '@/types';
-import { storageService } from '@/services/storageService';
+import { TasksState, Task, TaskFilter } from '../../types';
+import { storageService } from '../../services/storageService';
 import { v4 as uuidv4 } from 'uuid';
 
 const initialState: TasksState = {

@@ -14,9 +14,9 @@ import { Text, Card, Checkbox, IconButton, FAB, Badge } from 'react-native-paper
 import { useSelector, useDispatch } from 'react-redux';
 import { useNavigation } from '@react-navigation/native';
 import { StackNavigationProp } from '@react-navigation/stack';
-import { RootState } from '@/store';
-import { loadTasks, updateTask, deleteTask, selectFilteredTasks } from '@/store/slices/tasksSlice';
-import { Task, TaskPriority } from '@/types';
+import { RootState } from '../store';
+import { loadTasks, updateTask, deleteTask, selectFilteredTasks } from '../store/slices/tasksSlice';
+import { Task, TaskPriority } from '../types';
 import { format } from 'date-fns';
 
 type NavigationProp = StackNavigationProp<any>;

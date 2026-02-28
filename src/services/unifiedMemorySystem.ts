@@ -2,7 +2,7 @@
  * 统一记忆系统 - 集成混合检索和智能管理
  */
 
-import { AIMessage, AIConversation } from '@/types';
+import { AIMessage, AIConversation } from '../types';
 import { hybridMemorySystem } from './hybridMemorySystem';
 import { extendedStorageService } from './extendedStorageService';
 

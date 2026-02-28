@@ -2,7 +2,7 @@
  * 智能记忆管理器 - 快速改进版
  */
 
-import { AIMessage, AIConversation } from '@/types';
+import { AIMessage, AIConversation } from '../types';
 import { storageService } from './storageService';
 
 // 记忆配置

@@ -2,7 +2,7 @@
  * AI服务 - 支持多模型切换
  */
 
-import { AIRequest, ApiResponse } from '@/types';
+import { AIRequest, ApiResponse } from '../types';
 
 interface AIMessageResponse {
   content: string;

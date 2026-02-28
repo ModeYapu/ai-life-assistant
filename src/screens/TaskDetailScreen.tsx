@@ -21,9 +21,9 @@ import {
 } from 'react-native-paper';
 import { useSelector, useDispatch } from 'react-redux';
 import { useNavigation, useRoute } from '@react-navigation/native';
-import { RootState } from '@/store';
-import { createTask, updateTask } from '@/store/slices/tasksSlice';
-import { Task, TaskPriority, TaskStatus } from '@/types';
+import { RootState } from '../store';
+import { createTask, updateTask } from '../store/slices/tasksSlice';
+import { Task, TaskPriority, TaskStatus } from '../types';
 import { format } from 'date-fns';
 
 export const TaskDetailScreen: React.FC = () => {

@@ -21,16 +21,16 @@ import {
   Dialog,
 } from 'react-native-paper';
 import { useSelector, useDispatch } from 'react-redux';
-import { RootState } from '@/store';
+import { RootState } from '../store';
 import {
   loadSettings,
   setAIModel,
   setTheme,
   setTemperature,
   toggleStream,
-} from '@/store/slices/settingsSlice';
-import { storageService } from '@/services/storageService';
-import { aiService } from '@/services/aiService';
+} from '../store/slices/settingsSlice';
+import { storageService } from '../services/storageService';
+import { aiService } from '../services/aiService';
 
 export const SettingsScreen: React.FC = () => {
   const dispatch = useDispatch();

@@ -2,7 +2,7 @@
  * 混合记忆系统 - 结合多种检索策略
  */
 
-import { AIMessage } from '@/types';
+import { AIMessage } from '../types';
 import { freeVectorMemorySystem } from './freeVectorMemorySystem';
 
 interface SearchResult {

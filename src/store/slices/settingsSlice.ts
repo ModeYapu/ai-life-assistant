@@ -3,8 +3,8 @@
  */
 
 import { createSlice, createAsyncThunk, PayloadAction } from '@reduxjs/toolkit';
-import { SettingsState, AppSettings } from '@/types';
-import { storageService } from '@/services/storageService';
+import { SettingsState, AppSettings } from '../../types';
+import { storageService } from '../../services/storageService';
 
 const initialState: SettingsState = {
   settings: storageService.getDefaultSettings(),
