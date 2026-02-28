@@ -11,18 +11,38 @@ const initialState: AIState = {
   conversations: [],
   currentConversation: null,
   models: [
+    // OpenAI 模型
     {
-      id: 'gpt-4-turbo',
-      name: 'GPT-4 Turbo',
+      id: 'gpt-5.2-turbo',
+      name: 'GPT-5.2 Turbo',
       provider: 'openai',
       type: 'chat',
-      contextWindow: 128000,
-      pricing: { input: 0.01, output: 0.03 },
-      capabilities: ['text', 'code', 'analysis'],
+      contextWindow: 200000,
+      pricing: { input: 0.015, output: 0.06 },
+      capabilities: ['text', 'code', 'analysis', 'vision'],
     },
     {
-      id: 'claude-3-5-sonnet',
-      name: 'Claude 3.5 Sonnet',
+      id: 'gpt-5.2',
+      name: 'GPT-5.2',
+      provider: 'openai',
+      type: 'chat',
+      contextWindow: 200000,
+      pricing: { input: 0.03, output: 0.12 },
+      capabilities: ['text', 'code', 'analysis', 'vision'],
+    },
+    {
+      id: 'o3-mini',
+      name: 'O3 Mini',
+      provider: 'openai',
+      type: 'chat',
+      contextWindow: 200000,
+      pricing: { input: 0.001, output: 0.004 },
+      capabilities: ['text', 'code', 'reasoning'],
+    },
+    // Anthropic 模型
+    {
+      id: 'claude-3.7-sonnet',
+      name: 'Claude 3.7 Sonnet',
       provider: 'anthropic',
       type: 'chat',
       contextWindow: 200000,
@@ -30,16 +50,73 @@ const initialState: AIState = {
       capabilities: ['text', 'code', 'analysis', 'vision'],
     },
     {
-      id: 'gemini-pro',
-      name: 'Gemini Pro',
+      id: 'claude-3.7-opus',
+      name: 'Claude 3.7 Opus',
+      provider: 'anthropic',
+      type: 'chat',
+      contextWindow: 200000,
+      pricing: { input: 0.015, output: 0.075 },
+      capabilities: ['text', 'code', 'analysis', 'vision'],
+    },
+    // Google 模型
+    {
+      id: 'gemini-3.0-pro',
+      name: 'Gemini 3.0 Pro',
       provider: 'google',
       type: 'chat',
-      contextWindow: 32000,
-      pricing: { input: 0.0005, output: 0.0015 },
+      contextWindow: 1000000,
+      pricing: { input: 0.001, output: 0.002 },
       capabilities: ['text', 'code', 'vision'],
     },
+    {
+      id: 'gemini-3.0-ultra',
+      name: 'Gemini 3.0 Ultra',
+      provider: 'google',
+      type: 'chat',
+      contextWindow: 1000000,
+      pricing: { input: 0.01, output: 0.03 },
+      capabilities: ['text', 'code', 'vision', 'reasoning'],
+    },
+    // 智谱AI 模型
+    {
+      id: 'glm-5-plus',
+      name: 'GLM-5 Plus',
+      provider: 'zhipu',
+      type: 'chat',
+      contextWindow: 128000,
+      pricing: { input: 0.001, output: 0.001 },
+      capabilities: ['text', 'code', 'analysis'],
+    },
+    {
+      id: 'glm-5',
+      name: 'GLM-5',
+      provider: 'zhipu',
+      type: 'chat',
+      contextWindow: 32000,
+      pricing: { input: 0.0005, output: 0.0005 },
+      capabilities: ['text', 'code'],
+    },
+    // 本地模型
+    {
+      id: 'qwen-2.5-72b',
+      name: 'Qwen 2.5 72B (本地)',
+      provider: 'local',
+      type: 'chat',
+      contextWindow: 128000,
+      pricing: { input: 0, output: 0 },
+      capabilities: ['text', 'code'],
+    },
+    {
+      id: 'deepseek-v3',
+      name: 'DeepSeek V3 (本地)',
+      provider: 'local',
+      type: 'chat',
+      contextWindow: 64000,
+      pricing: { input: 0, output: 0 },
+      capabilities: ['text', 'code', 'reasoning'],
+    },
   ],
-  selectedModel: 'claude-3-5-sonnet',
+  selectedModel: 'claude-3.7-sonnet',
   loading: false,
   error: null,
 };
@@ -64,7 +141,7 @@ export const sendMessage = createAsyncThunk(
 
       // 调用AI服务（改进：使用统一记忆系统）
       // 导入统一记忆系统
-      const { unifiedMemorySystem } = await import('@/services/unifiedMemorySystem');
+      const { unifiedMemorySystem } = await import('../../services/unifiedMemorySystem');
       
       // 初始化（如果还没初始化）
       await unifiedMemorySystem.initialize();

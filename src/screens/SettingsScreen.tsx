@@ -43,6 +43,8 @@ export const SettingsScreen: React.FC = () => {
     openai: '',
     anthropic: '',
     google: '',
+    zhipu: '',
+    local_endpoint: '',
   });
   const [temperature, setTemperatureLocal] = useState(
     settings.ai.temperature.toString()
@@ -59,6 +61,8 @@ export const SettingsScreen: React.FC = () => {
       openai: keys.openai || '',
       anthropic: keys.anthropic || '',
       google: keys.google || '',
+      zhipu: keys.zhipu || '',
+      local_endpoint: keys.local_endpoint || 'http://localhost:8000/v1/chat/completions',
     });
   };
 
@@ -76,7 +80,15 @@ export const SettingsScreen: React.FC = () => {
         await storageService.saveApiKey('google', apiKeys.google);
         aiService.setApiKey('google', apiKeys.google);
       }
-      
+      if (apiKeys.zhipu) {
+        await storageService.saveApiKey('zhipu', apiKeys.zhipu);
+        aiService.setApiKey('zhipu', apiKeys.zhipu);
+      }
+      if (apiKeys.local_endpoint) {
+        await storageService.saveApiKey('local_endpoint', apiKeys.local_endpoint);
+        aiService.setApiKey('local_endpoint', apiKeys.local_endpoint);
+      }
+
       setShowApiKeysDialog(false);
       Alert.alert('成功', 'API Keys已保存');
     } catch (error) {
@@ -284,29 +296,51 @@ export const SettingsScreen: React.FC = () => {
         >
           <Dialog.Title>配置API Keys</Dialog.Title>
           <Dialog.Content>
-            <TextInput
-              label="OpenAI API Key"
-              value={apiKeys.openai}
-              onChangeText={(text) => setApiKeys({ ...apiKeys, openai: text })}
-              style={styles.apiKeyInput}
-              secureTextEntry
-            />
-            <TextInput
-              label="Anthropic API Key"
-              value={apiKeys.anthropic}
-              onChangeText={(text) =>
-                setApiKeys({ ...apiKeys, anthropic: text })
-              }
-              style={styles.apiKeyInput}
-              secureTextEntry
-            />
-            <TextInput
-              label="Google API Key"
-              value={apiKeys.google}
-              onChangeText={(text) => setApiKeys({ ...apiKeys, google: text })}
-              style={styles.apiKeyInput}
-              secureTextEntry
-            />
+            <ScrollView style={{ maxHeight: 400 }}>
+              <Text style={{ fontWeight: 'bold', marginBottom: 8 }}>OpenAI (GPT-5.2 / O3)</Text>
+              <TextInput
+                placeholder="sk-..."
+                value={apiKeys.openai}
+                onChangeText={(text) => setApiKeys({ ...apiKeys, openai: text })}
+                style={styles.apiKeyInput}
+                secureTextEntry
+              />
+
+              <Text style={{ fontWeight: 'bold', marginBottom: 8 }}>Anthropic (Claude 3.7)</Text>
+              <TextInput
+                placeholder="sk-ant-..."
+                value={apiKeys.anthropic}
+                onChangeText={(text) => setApiKeys({ ...apiKeys, anthropic: text })}
+                style={styles.apiKeyInput}
+                secureTextEntry
+              />
+
+              <Text style={{ fontWeight: 'bold', marginBottom: 8 }}>Google (Gemini 3.0)</Text>
+              <TextInput
+                placeholder="AIza..."
+                value={apiKeys.google}
+                onChangeText={(text) => setApiKeys({ ...apiKeys, google: text })}
+                style={styles.apiKeyInput}
+                secureTextEntry
+              />
+
+              <Text style={{ fontWeight: 'bold', marginBottom: 8 }}>智谱AI (GLM-5)</Text>
+              <TextInput
+                placeholder="智谱AI API Key"
+                value={apiKeys.zhipu}
+                onChangeText={(text) => setApiKeys({ ...apiKeys, zhipu: text })}
+                style={styles.apiKeyInput}
+                secureTextEntry
+              />
+
+              <Text style={{ fontWeight: 'bold', marginBottom: 8 }}>本地模型 (Qwen/DeepSeek)</Text>
+              <TextInput
+                placeholder="http://localhost:8000/v1/chat/completions"
+                value={apiKeys.local_endpoint}
+                onChangeText={(text) => setApiKeys({ ...apiKeys, local_endpoint: text })}
+                style={styles.apiKeyInput}
+              />
+            </ScrollView>
           </Dialog.Content>
           <Dialog.Actions>
             <Button onPress={() => setShowApiKeysDialog(false)}>取消</Button>
