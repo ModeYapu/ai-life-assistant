@@ -1,0 +1,24 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(git push origin main)",
+      "Read(//c/Program Files/**)",
+      "Bash(choco install microsoft-openjdk17 -y)",
+      "Bash(ls -d \"C:/Program Files/Microsoft/jdk-17\"*)",
+      "Bash(ls -d \"C:/Program Files/Eclipse Adoptium/jdk-17\"*)",
+      "Bash(ls -d \"C:/Program Files/Java/jdk-17\"*)",
+      "Bash(ls -d \"C:/Program Files/Zulu/zulu-17\"*)",
+      "Bash(export JAVA_HOME=\"C:/Program Files/Microsoft/jdk-17.0.18.8-hotspot\")",
+      "Bash(export PATH=\"$JAVA_HOME/bin:$PATH\")",
+      "Bash(\"C:/Program Files/Microsoft/jdk-17.0.18.8-hotspot/bin/java.exe\" -version)",
+      "Bash(JAVA_HOME=\"C:/Program Files/Microsoft/jdk-17.0.18.8-hotspot\" ./gradlew.bat app:installDebug)",
+      "Bash(npm install react-native-reanimated@3.6.2 --save-exact)",
+      "Bash(JAVA_HOME=\"C:/Program Files/Microsoft/jdk-17.0.18.8-hotspot\" ./gradlew.bat clean app:installDebug)",
+      "Bash(npm install react-native-screens@3.29.0 react-native-gesture-handler@2.14.0 --save-exact)",
+      "Bash(npm install realm@12.3.0 --save-exact)",
+      "Bash(git add package.json android/app/build.gradle android/gradle.properties)",
+      "Bash(git config --global --list)",
+      "Bash(git config --global --unset http.https://github.com.proxy)"
+    ]
+  }
+}

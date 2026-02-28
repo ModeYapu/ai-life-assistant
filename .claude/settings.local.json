@@ -1,0 +1,11 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(npx react-native upgrade --skip-dependencies)",
+      "Bash(npx react-native upgrade)",
+      "Bash(npm cache clean --force)",
+      "Bash(npx @react-native-community/cli@15 init TempRNProject --version 0.73.2 --skip-install --pm npm)",
+      "Bash(npm run android)"
+    ]
+  }
+}
