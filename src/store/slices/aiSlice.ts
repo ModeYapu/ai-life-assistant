@@ -5,7 +5,15 @@
 import { createSlice, createAsyncThunk, PayloadAction } from '@reduxjs/toolkit';
 import { AIState, AIMessage, AIConversation } from '../../types';
 import { aiService } from '../../services/aiService';
-import { v4 as uuidv4 } from 'uuid';
+
+// 简单的 UUID 生成器（兼容 React Native）
+const generateId = () => {
+  return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, (c) => {
+    const r = (Math.random() * 16) | 0;
+    const v = c === 'x' ? r : (r & 0x3) | 0x8;
+    return v.toString(16);
+  });
+};
 
 const initialState: AIState = {
   conversations: [],
@@ -79,21 +87,21 @@ const initialState: AIState = {
     },
     // 智谱AI 模型
     {
-      id: 'glm-5-plus',
-      name: 'GLM-5 Plus',
+      id: 'glm-5',
+      name: 'GLM-5 (Opus级)',
+      provider: 'zhipu',
+      type: 'chat',
+      contextWindow: 128000,
+      pricing: { input: 0.05, output: 0.05 },
+      capabilities: ['text', 'code', 'analysis'],
+    },
+    {
+      id: 'glm-4.7',
+      name: 'GLM-4.7 (Sonnet级)',
       provider: 'zhipu',
       type: 'chat',
       contextWindow: 128000,
       pricing: { input: 0.001, output: 0.001 },
-      capabilities: ['text', 'code', 'analysis'],
-    },
-    {
-      id: 'glm-5',
-      name: 'GLM-5',
-      provider: 'zhipu',
-      type: 'chat',
-      contextWindow: 32000,
-      pricing: { input: 0.0005, output: 0.0005 },
       capabilities: ['text', 'code'],
     },
     // 本地模型
@@ -116,7 +124,7 @@ const initialState: AIState = {
       capabilities: ['text', 'code', 'reasoning'],
     },
   ],
-  selectedModel: 'claude-3.7-sonnet',
+  selectedModel: 'glm-5',
   loading: false,
   error: null,
 };
@@ -130,39 +138,42 @@ export const sendMessage = createAsyncThunk(
   ) => {
     try {
       const state = getState() as any;
-      const { selectedModel, currentConversation } = state.ai;
-      
+      const { selectedModel, currentConversation, conversations } = state.ai;
+
+      // 找到当前对话
+      const conversation = conversations.find((c: AIConversation) => c.id === payload.conversationId)
+        || currentConversation;
+
+      if (!conversation) {
+        throw new Error('Conversation not found');
+      }
+
       const userMessage: AIMessage = {
-        id: uuidv4(),
+        id: generateId(),
         role: 'user',
         content: payload.content,
         timestamp: Date.now(),
       };
 
-      // 调用AI服务（改进：使用统一记忆系统）
-      // 导入统一记忆系统
-      const { unifiedMemorySystem } = await import('../../services/unifiedMemorySystem');
-      
-      // 初始化（如果还没初始化）
-      await unifiedMemorySystem.initialize();
-      
-      // 获取智能上下文（包括历史+相关记忆）
-      const contextMessages = await unifiedMemorySystem.getContextForConversation(
-        payload.conversationId,
-        payload.content,
-        10
-      );
-      
+      // 构建消息历史（最近10条）
+      const recentMessages = conversation.messages
+        .slice(-10)
+        .map((m: AIMessage) => ({
+          role: m.role as 'user' | 'assistant' | 'system',
+          content: m.content,
+        }));
+
+      // 调用AI服务
       const response = await aiService.sendMessage({
         model: selectedModel,
         messages: [
-          ...contextMessages,
-          { role: 'user', content: payload.content }
+          ...recentMessages,
+          { role: 'user' as const, content: payload.content }
         ],
       });
 
       const assistantMessage: AIMessage = {
-        id: uuidv4(),
+        id: generateId(),
         role: 'assistant',
         content: response.content,
         timestamp: Date.now(),
@@ -179,22 +190,9 @@ export const sendMessage = createAsyncThunk(
         assistantMessage,
       };
     } catch (error: any) {
-      return rejectWithValue(error.message);
+      console.error('sendMessage error:', error);
+      return rejectWithValue(error.message || 'Unknown error');
     }
-  }
-);
-
-export const createConversation = createAsyncThunk(
-  'ai/createConversation',
-  async (title: string = '新对话') => {
-    const conversation: AIConversation = {
-      id: uuidv4(),
-      title,
-      messages: [],
-      createdAt: Date.now(),
-      updatedAt: Date.now(),
-    };
-    return conversation;
   }
 );
 
@@ -226,6 +224,17 @@ const aiSlice = createSlice({
         state.currentConversation = null;
       }
     },
+    createConversation: (state) => {
+      const newConversation: AIConversation = {
+        id: generateId(),
+        title: '新对话',
+        messages: [],
+        createdAt: Date.now(),
+        updatedAt: Date.now(),
+      };
+      state.conversations.unshift(newConversation);
+      state.currentConversation = newConversation;
+    },
   },
   extraReducers: (builder) => {
     builder
@@ -237,18 +246,30 @@ const aiSlice = createSlice({
       .addCase(sendMessage.fulfilled, (state, action) => {
         state.loading = false;
         const { conversationId, userMessage, assistantMessage } = action.payload;
-        
-        const conversation = state.conversations.find(c => c.id === conversationId);
+
+        // 查找或创建对话
+        let conversation = state.conversations.find(c => c.id === conversationId);
+
+        if (!conversation) {
+          // 如果对话不存在于数组中，但currentConversation匹配，使用它
+          if (state.currentConversation?.id === conversationId) {
+            conversation = state.currentConversation;
+            // 确保添加到数组中
+            state.conversations.unshift(conversation);
+          }
+        }
+
         if (conversation) {
           conversation.messages.push(userMessage, assistantMessage);
           conversation.updatedAt = Date.now();
-          
+
           // 自动生成标题（如果是第一条消息）
           if (conversation.messages.length === 2) {
-            conversation.title = userMessage.content.slice(0, 30) + '...';
+            conversation.title = userMessage.content.slice(0, 30) + (userMessage.content.length > 30 ? '...' : '');
           }
         }
-        
+
+        // 同步更新 currentConversation
         if (state.currentConversation?.id === conversationId) {
           state.currentConversation = conversation || null;
         }
@@ -256,20 +277,16 @@ const aiSlice = createSlice({
       .addCase(sendMessage.rejected, (state, action) => {
         state.loading = false;
         state.error = action.payload as string;
-      })
-      // 创建对话
-      .addCase(createConversation.fulfilled, (state, action) => {
-        state.conversations.unshift(action.payload);
-        state.currentConversation = action.payload;
       });
   },
 });
 
-export const { 
-  setCurrentConversation, 
-  setSelectedModel, 
+export const {
+  setCurrentConversation,
+  setSelectedModel,
   clearError,
-  deleteConversation 
+  deleteConversation,
+  createConversation,
 } = aiSlice.actions;
 
 export default aiSlice.reducer;

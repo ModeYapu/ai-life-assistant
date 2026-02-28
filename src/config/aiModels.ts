@@ -116,30 +116,30 @@ export const AI_MODELS: AIModelConfig[] = [
 
   // ============ Zhipu AI Models ============
   {
-    id: 'glm-5-plus',
-    name: 'GLM-5 Plus',
+    id: 'glm-5',
+    name: 'GLM-5 (Opus级)',
     provider: 'zhipu',
-    version: '2026-02',
+    version: '2025-01',
     contextWindow: 128000,
     capabilities: ['chat', 'code', 'reasoning', 'function_calling'],
+    pricing: {
+      input: 0.05,
+      output: 0.05,
+    },
+    codePlan: true,
+  },
+  {
+    id: 'glm-4.7',
+    name: 'GLM-4.7 (Sonnet级)',
+    provider: 'zhipu',
+    version: '2025-01',
+    contextWindow: 128000,
+    capabilities: ['chat', 'code', 'reasoning'],
     pricing: {
       input: 0.001,
       output: 0.001,
     },
     codePlan: true,
-  },
-  {
-    id: 'glm-5',
-    name: 'GLM-5',
-    provider: 'zhipu',
-    version: '2026-01',
-    contextWindow: 128000,
-    capabilities: ['chat', 'code', 'reasoning'],
-    pricing: {
-      input: 0.0005,
-      output: 0.0005,
-    },
-    codePlan: false,
   },
 
   // ============ Local Models ============
@@ -180,5 +180,5 @@ export const getDefaultModel = (): AIModelConfig => {
 
 // 获取推荐模型（性价比最高）
 export const getRecommendedModel = (): AIModelConfig => {
-  return AI_MODELS.find(m => m.id === 'claude-3.7-sonnet') || AI_MODELS[0];
+  return AI_MODELS.find(m => m.id === 'glm-5') || AI_MODELS[0];
 };

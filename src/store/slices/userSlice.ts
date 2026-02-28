@@ -1,97 +1,40 @@
 /**
- * 用户状态管理
+ * 用户偏好设置状态管理 - 免登录版本
  */
 
-import { createSlice, createAsyncThunk, PayloadAction } from '@reduxjs/toolkit';
-import { UserState, User } from '../../types';
-import { storageService } from '../../services/storageService';
-import { v4 as uuidv4 } from 'uuid';
+import { createSlice, PayloadAction } from '@reduxjs/toolkit';
+import { UserState } from '../../types';
+
+// 默认偏好设置
+const defaultPreferences = {
+  theme: 'auto' as const,
+  language: 'zh-CN',
+  aiModel: 'claude-3.7-sonnet',
+  codePlanEnabled: false,
+  notifications: {
+    tasks: true,
+    reminders: true,
+    updates: true,
+  },
+  privacy: {
+    analytics: true,
+    crashReports: true,
+  },
+};
 
 const initialState: UserState = {
-  currentUser: null,
-  isAuthenticated: false,
+  currentUser: {
+    id: 'local-user',
+    name: '本地用户',
+    email: '',
+    preferences: defaultPreferences,
+    createdAt: Date.now(),
+    updatedAt: Date.now(),
+  },
+  isAuthenticated: true, // 免登录，始终为true
   loading: false,
   error: null,
 };
-
-// Async Thunks
-export const loadUser = createAsyncThunk(
-  'user/loadUser',
-  async (_, { rejectWithValue }) => {
-    try {
-      const user = await storageService.getUser();
-      return user;
-    } catch (error: any) {
-      return rejectWithValue(error.message);
-    }
-  }
-);
-
-export const login = createAsyncThunk(
-  'user/login',
-  async (userData: Partial<User>, { rejectWithValue }) => {
-    try {
-      // 这里简化处理，实际应该调用认证API
-      const user: User = {
-        id: uuidv4(),
-        name: userData.name || 'User',
-        email: userData.email || '',
-        avatar: userData.avatar,
-        preferences: {
-          theme: 'auto',
-          language: 'zh-CN',
-          aiModel: 'claude-3.7-sonnet',
-          codePlanEnabled: false,
-          notifications: {
-            tasks: true,
-            reminders: true,
-            updates: true,
-          },
-          privacy: {
-            analytics: true,
-            crashReports: true,
-          },
-        },
-        createdAt: Date.now(),
-        updatedAt: Date.now(),
-      };
-      
-      await storageService.saveUser(user);
-      return user;
-    } catch (error: any) {
-      return rejectWithValue(error.message);
-    }
-  }
-);
-
-export const updateUser = createAsyncThunk(
-  'user/updateUser',
-  async (user: User, { rejectWithValue }) => {
-    try {
-      const updatedUser = {
-        ...user,
-        updatedAt: Date.now(),
-      };
-      await storageService.saveUser(updatedUser);
-      return updatedUser;
-    } catch (error: any) {
-      return rejectWithValue(error.message);
-    }
-  }
-);
-
-export const logout = createAsyncThunk(
-  'user/logout',
-  async (_, { rejectWithValue }) => {
-    try {
-      // 清除用户数据
-      await storageService.clearAll();
-      return null;
-    } catch (error: any) {
-      return rejectWithValue(error.message);
-    }
-  }
-);
 
 // Slice
 const userSlice = createSlice({
@@ -101,56 +44,56 @@ const userSlice = createSlice({
     clearError: (state) => {
       state.error = null;
     },
-    updatePreferences: (state, action: PayloadAction<Partial<User['preferences']>>) => {
+    updatePreferences: (state, action: PayloadAction<Partial<typeof defaultPreferences>>) => {
       if (state.currentUser) {
         state.currentUser.preferences = {
           ...state.currentUser.preferences,
           ...action.payload,
         };
+        state.currentUser.updatedAt = Date.now();
+      }
+    },
+    setTheme: (state, action: PayloadAction<'light' | 'dark' | 'auto'>) => {
+      if (state.currentUser) {
+        state.currentUser.preferences.theme = action.payload;
+        state.currentUser.updatedAt = Date.now();
+      }
+    },
+    setLanguage: (state, action: PayloadAction<string>) => {
+      if (state.currentUser) {
+        state.currentUser.preferences.language = action.payload;
+        state.currentUser.updatedAt = Date.now();
+      }
+    },
+    toggleCodePlan: (state) => {
+      if (state.currentUser) {
+        state.currentUser.preferences.codePlanEnabled =
+          !state.currentUser.preferences.codePlanEnabled;
+        state.currentUser.updatedAt = Date.now();
+      }
+    },
+    updateNotificationSettings: (
+      state,
+      action: PayloadAction<Partial<typeof defaultPreferences.notifications>>
+    ) => {
+      if (state.currentUser) {
+        state.currentUser.preferences.notifications = {
+          ...state.currentUser.preferences.notifications,
+          ...action.payload,
+        };
+        state.currentUser.updatedAt = Date.now();
       }
     },
   },
-  extraReducers: (builder) => {
-    builder
-      // 加载用户
-      .addCase(loadUser.pending, (state) => {
-        state.loading = true;
-        state.error = null;
-      })
-      .addCase(loadUser.fulfilled, (state, action) => {
-        state.loading = false;
-        state.currentUser = action.payload;
-        state.isAuthenticated = action.payload !== null;
-      })
-      .addCase(loadUser.rejected, (state, action) => {
-        state.loading = false;
-        state.error = action.payload as string;
-      })
-      // 登录
-      .addCase(login.pending, (state) => {
-        state.loading = true;
-        state.error = null;
-      })
-      .addCase(login.fulfilled, (state, action) => {
-        state.loading = false;
-        state.currentUser = action.payload;
-        state.isAuthenticated = true;
-      })
-      .addCase(login.rejected, (state, action) => {
-        state.loading = false;
-        state.error = action.payload as string;
-      })
-      // 更新用户
-      .addCase(updateUser.fulfilled, (state, action) => {
-        state.currentUser = action.payload;
-      })
-      // 登出
-      .addCase(logout.fulfilled, (state) => {
-        state.currentUser = null;
-        state.isAuthenticated = false;
-      });
-  },
 });
 
-export const { clearError, updatePreferences } = userSlice.actions;
+export const {
+  clearError,
+  updatePreferences,
+  setTheme,
+  setLanguage,
+  toggleCodePlan,
+  updateNotificationSettings,
+} = userSlice.actions;
+
 export default userSlice.reducer;

@@ -5,7 +5,15 @@
 import { createSlice, createAsyncThunk, PayloadAction } from '@reduxjs/toolkit';
 import { TasksState, Task, TaskFilter } from '../../types';
 import { storageService } from '../../services/storageService';
-import { v4 as uuidv4 } from 'uuid';
+
+// 简单的 UUID 生成器（兼容 React Native）
+const generateId = () => {
+  return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, (c) => {
+    const r = (Math.random() * 16) | 0;
+    const v = c === 'x' ? r : (r & 0x3) | 0x8;
+    return v.toString(16);
+  });
+};
 
 const initialState: TasksState = {
   tasks: [],
@@ -33,7 +41,7 @@ export const createTask = createAsyncThunk(
   async (taskData: Partial<Task>, { rejectWithValue }) => {
     try {
       const task: Task = {
-        id: uuidv4(),
+        id: generateId(),
         title: taskData.title || '新任务',
         description: taskData.description,
         status: 'pending',

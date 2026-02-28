@@ -1,40 +1,29 @@
 /**
- * 个人中心页面
+ * 个人中心页面 - 免登录版本
  */
 
-import React, { useEffect } from 'react';
+import React from 'react';
 import {
   View,
   ScrollView,
   StyleSheet,
-  Image,
 } from 'react-native';
 import {
   Text,
   Card,
   List,
   Avatar,
-  Button,
   ProgressBar,
   Divider,
 } from 'react-native-paper';
-import { useSelector, useDispatch } from 'react-redux';
+import { useSelector } from 'react-redux';
 import { useNavigation } from '@react-navigation/native';
 import { RootState } from '../store';
-import { loadUser } from '../store/slices/userSlice';
 
 export const ProfileScreen: React.FC = () => {
   const navigation = useNavigation();
-  const dispatch = useDispatch();
-  const { currentUser, isAuthenticated } = useSelector(
-    (state: RootState) => state.user
-  );
   const { tasks } = useSelector((state: RootState) => state.tasks);
   const { conversations } = useSelector((state: RootState) => state.ai);
-
-  useEffect(() => {
-    dispatch(loadUser());
-  }, []);
 
   // 统计数据
   const completedTasks = tasks.filter((t) => t.status === 'completed').length;
@@ -46,58 +35,18 @@ export const ProfileScreen: React.FC = () => {
     0
   );
 
-  const getPlanName = (plan: string) => {
-    switch (plan) {
-      case 'free':
-        return '免费版';
-      case 'pro':
-        return '专业版';
-      case 'enterprise':
-        return '企业版';
-      default:
-        return plan;
-    }
-  };
-
-  const getPlanColor = (plan: string) => {
-    switch (plan) {
-      case 'free':
-        return '#9E9E9E';
-      case 'pro':
-        return '#6200EE';
-      case 'enterprise':
-        return '#FF9800';
-      default:
-        return '#9E9E9E';
-    }
-  };
-
   return (
     <ScrollView style={styles.container}>
-      {/* 用户信息卡片 */}
+      {/* 应用信息卡片 */}
       <Card style={styles.userCard}>
         <Card.Content style={styles.userContent}>
-          <Avatar.Text
+          <Avatar.Icon
             size={80}
-            label={currentUser?.name?.charAt(0) || 'U'}
+            icon="robot"
             style={styles.avatar}
           />
-          <Text style={styles.userName}>
-            {currentUser?.name || '未登录'}
-          </Text>
-          {currentUser?.email && (
-            <Text style={styles.userEmail}>{currentUser.email}</Text>
-          )}
-          <View
-            style={[
-              styles.planBadge,
-              { backgroundColor: getPlanColor(currentUser?.subscription.plan || 'free') },
-            ]}
-          >
-            <Text style={styles.planText}>
-              {getPlanName(currentUser?.subscription.plan || 'free')}
-            </Text>
-          </View>
+          <Text style={styles.appName}>AI Life Assistant</Text>
+          <Text style={styles.appSlogan}>你的智能生活助手</Text>
         </Card.Content>
       </Card>
 
@@ -105,7 +54,7 @@ export const ProfileScreen: React.FC = () => {
       <Card style={styles.statsCard}>
         <Card.Content>
           <Text style={styles.sectionTitle}>使用统计</Text>
-          
+
           <View style={styles.statRow}>
             <View style={styles.statItem}>
               <Text style={styles.statNumber}>{totalMessages}</Text>
@@ -116,8 +65,8 @@ export const ProfileScreen: React.FC = () => {
               <Text style={styles.statLabel}>完成任务</Text>
             </View>
             <View style={styles.statItem}>
-              <Text style={styles.statNumber}>0h</Text>
-              <Text style={styles.statLabel}>节省时间</Text>
+              <Text style={styles.statNumber}>{conversations.length}</Text>
+              <Text style={styles.statLabel}>对话数</Text>
             </View>
           </View>
 
@@ -137,39 +86,20 @@ export const ProfileScreen: React.FC = () => {
 
       {/* 功能列表 */}
       <List.Section>
-        <List.Subheader>账户</List.Subheader>
-        
-        <List.Item
-          title="个人资料"
-          left={(props) => <List.Icon {...props} icon="account-edit" />}
-          onPress={() => {}}
-        />
-        
-        <List.Item
-          title="订阅管理"
-          description="升级到专业版"
-          left={(props) => <List.Icon {...props} icon="credit-card" />}
-          onPress={() => {}}
-        />
-      </List.Section>
-
-      <Divider />
-
-      <List.Section>
         <List.Subheader>偏好设置</List.Subheader>
-        
+
         <List.Item
           title="通知设置"
           left={(props) => <List.Icon {...props} icon="bell" />}
           onPress={() => {}}
         />
-        
+
         <List.Item
           title="隐私设置"
           left={(props) => <List.Icon {...props} icon="shield-lock" />}
           onPress={() => {}}
         />
-        
+
         <List.Item
           title="语言"
           description="简体中文"
@@ -182,19 +112,19 @@ export const ProfileScreen: React.FC = () => {
 
       <List.Section>
         <List.Subheader>支持</List.Subheader>
-        
+
         <List.Item
           title="帮助中心"
           left={(props) => <List.Icon {...props} icon="help-circle" />}
           onPress={() => {}}
         />
-        
+
         <List.Item
           title="反馈建议"
           left={(props) => <List.Icon {...props} icon="message-text" />}
           onPress={() => {}}
         />
-        
+
         <List.Item
           title="给个好评"
           left={(props) => <List.Icon {...props} icon="star" />}
@@ -206,13 +136,13 @@ export const ProfileScreen: React.FC = () => {
 
       <List.Section>
         <List.Subheader>其他</List.Subheader>
-        
+
         <List.Item
           title="设置"
           left={(props) => <List.Icon {...props} icon="cog" />}
           onPress={() => navigation.navigate('Settings' as never)}
         />
-        
+
         <List.Item
           title="关于"
           description="版本 0.1.0"
@@ -221,16 +151,8 @@ export const ProfileScreen: React.FC = () => {
         />
       </List.Section>
 
-      {/* 登出按钮 */}
-      <View style={styles.logoutContainer}>
-        <Button
-          mode="outlined"
-          onPress={() => {}}
-          style={styles.logoutButton}
-          color="#F44336"
-        >
-          退出登录
-        </Button>
+      <View style={styles.footer}>
+        <Text style={styles.footerText}>Made with ❤️ by AI</Text>
       </View>
     </ScrollView>
   );
@@ -253,24 +175,14 @@ const styles = StyleSheet.create({
     marginBottom: 16,
     backgroundColor: '#6200EE',
   },
-  userName: {
+  appName: {
     fontSize: 24,
     fontWeight: 'bold',
     marginBottom: 4,
   },
-  userEmail: {
+  appSlogan: {
     fontSize: 14,
     color: '#666',
-    marginBottom: 12,
-  },
-  planBadge: {
-    paddingHorizontal: 16,
-    paddingVertical: 6,
-    borderRadius: 16,
-  },
-  planText: {
-    color: '#FFF',
-    fontWeight: 'bold',
   },
   statsCard: {
     margin: 16,
@@ -317,11 +229,12 @@ const styles = StyleSheet.create({
     marginTop: 8,
     textAlign: 'center',
   },
-  logoutContainer: {
-    padding: 16,
-    paddingBottom: 32,
+  footer: {
+    padding: 32,
+    alignItems: 'center',
   },
-  logoutButton: {
-    borderColor: '#F44336',
+  footerText: {
+    fontSize: 12,
+    color: '#999',
   },
 });

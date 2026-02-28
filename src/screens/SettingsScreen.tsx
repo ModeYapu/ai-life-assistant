@@ -24,11 +24,11 @@ import { useSelector, useDispatch } from 'react-redux';
 import { RootState } from '../store';
 import {
   loadSettings,
-  setAIModel,
   setTheme,
   setTemperature,
   toggleStream,
 } from '../store/slices/settingsSlice';
+import { setSelectedModel } from '../store/slices/aiSlice';
 import { storageService } from '../services/storageService';
 import { aiService } from '../services/aiService';
 
@@ -205,35 +205,28 @@ export const SettingsScreen: React.FC = () => {
 
       <Divider />
 
-      {/* 同步设置 */}
+      {/* 数据管理 */}
       <List.Section>
-        <List.Subheader>数据同步</List.Subheader>
-        
+        <List.Subheader>数据管理</List.Subheader>
+
         <List.Item
-          title="启用同步"
-          description="同步数据到云端"
-          left={(props) => <List.Icon {...props} icon="cloud-sync" />}
-          right={() => (
-            <Switch
-              value={settings.sync.enabled}
-              onValueChange={() => {}}
-            />
-          )}
+          title="清除缓存"
+          description="清除临时数据"
+          left={(props) => <List.Icon {...props} icon="delete-sweep" />}
+          onPress={() => {
+            Alert.alert('确认', '确定要清除缓存吗？', [
+              { text: '取消', style: 'cancel' },
+              { text: '确定', onPress: () => Alert.alert('成功', '缓存已清除') },
+            ]);
+          }}
         />
-        
-        {settings.sync.enabled && (
-          <List.Item
-            title="仅WiFi同步"
-            description="仅在WiFi下同步"
-            left={(props) => <List.Icon {...props} icon="wifi" />}
-            right={() => (
-              <Switch
-                value={settings.sync.wifiOnly}
-                onValueChange={() => {}}
-              />
-            )}
-          />
-        )}
+
+        <List.Item
+          title="导出数据"
+          description="导出所有数据到本地"
+          left={(props) => <List.Icon {...props} icon="export" />}
+          onPress={() => Alert.alert('提示', '功能开发中')}
+        />
       </List.Section>
 
       <Divider />
@@ -241,21 +234,15 @@ export const SettingsScreen: React.FC = () => {
       {/* 关于 */}
       <List.Section>
         <List.Subheader>关于</List.Subheader>
-        
+
         <List.Item
           title="版本"
           description="0.1.0"
           left={(props) => <List.Icon {...props} icon="information" />}
         />
-        
+
         <List.Item
-          title="隐私政策"
-          left={(props) => <List.Icon {...props} icon="shield-account" />}
-          onPress={() => {}}
-        />
-        
-        <List.Item
-          title="使用条款"
+          title="开源协议"
           left={(props) => <List.Icon {...props} icon="file-document" />}
           onPress={() => {}}
         />
@@ -271,7 +258,7 @@ export const SettingsScreen: React.FC = () => {
           <Dialog.Content>
             <RadioButton.Group
               onValueChange={(value) => {
-                dispatch(setAIModel(value));
+                dispatch(setSelectedModel(value));
                 setShowModelDialog(false);
               }}
               value={selectedModel}
