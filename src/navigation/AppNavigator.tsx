@@ -6,6 +6,7 @@ import React from 'react';
 import { NavigationContainer } from '@react-navigation/native';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { createStackNavigator } from '@react-navigation/stack';
+import { CodePlanScreen } from '../screens/CodePlanScreen';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 
 import { RootStackParamList, MainTabParamList } from '../types';
