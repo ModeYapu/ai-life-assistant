@@ -10,6 +10,7 @@ import {
   TextInput,
   TouchableOpacity,
   Alert,
+  Platform,
 } from 'react-native';
 import {
   Text,
@@ -18,6 +19,7 @@ import {
   Chip,
   IconButton,
 } from 'react-native-paper';
+import DateTimePicker from '@react-native-community/datetimepicker';
 import { useSelector, useDispatch } from 'react-redux';
 import { useNavigation, useRoute } from '@react-navigation/native';
 import { RootState } from '../store';
@@ -40,6 +42,7 @@ export const TaskDetailScreen: React.FC = () => {
   const [priority, setPriority] = useState<TaskPriority>('medium');
   const [status, setStatus] = useState<TaskStatus>('pending');
   const [dueDate, setDueDate] = useState<number | undefined>();
+  const [showDatePicker, setShowDatePicker] = useState(false);
   const [tags, setTags] = useState<string[]>([]);
   const [newTag, setNewTag] = useState('');
 
@@ -177,20 +180,26 @@ export const TaskDetailScreen: React.FC = () => {
         <Text style={styles.label}>截止日期</Text>
         <TouchableOpacity
           style={styles.dateButton}
-          onPress={() => {
-            // 简化版本：切换日期显示
-            if (dueDate) {
-              setDueDate(undefined);
-            } else {
-              setDueDate(Date.now() + 24 * 60 * 60 * 1000); // 默认明天
-            }
-          }}
+          onPress={() => setShowDatePicker(true)}
         >
           <Text>
-            {dueDate ? format(dueDate, 'yyyy-MM-dd HH:mm') : '点击设置截止日期（默认明天）'}
+            {dueDate ? format(dueDate, 'yyyy-MM-dd HH:mm') : '点击选择日期时间'}
           </Text>
           <IconButton icon="calendar" />
         </TouchableOpacity>
+        {showDatePicker && (
+          <DateTimePicker
+            value={dueDate ? new Date(dueDate) : new Date()}
+            mode="datetime"
+            display={Platform.OS === 'ios' ? 'spinner' : 'default'}
+            onChange={(event, selectedDate) => {
+              setShowDatePicker(false);
+              if (selectedDate) {
+                setDueDate(selectedDate.getTime());
+              }
+            }}
+          />
+        )}
         {dueDate && (
           <Button
             mode="text"
