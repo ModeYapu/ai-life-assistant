@@ -212,7 +212,7 @@ export const SettingsScreen: React.FC = () => {
         <List.Item
           title="清除缓存"
           description="清除临时数据"
-          left={(props) => <List.Icon {...props} icon="delete-sweep" />}
+          left={(props) => <List.Icon {...props} icon="delete" />}
           onPress={() => {
             Alert.alert('确认', '确定要清除缓存吗？', [
               { text: '取消', style: 'cancel' },
@@ -224,7 +224,7 @@ export const SettingsScreen: React.FC = () => {
         <List.Item
           title="导出数据"
           description="导出所有数据到本地"
-          left={(props) => <List.Icon {...props} icon="export" />}
+          left={(props) => <List.Icon {...props} icon="download" />}
           onPress={() => Alert.alert('提示', '功能开发中')}
         />
       </List.Section>

@@ -96,7 +96,7 @@ export const ProfileScreen: React.FC = () => {
 
         <List.Item
           title="隐私设置"
-          left={(props) => <List.Icon {...props} icon="shield-lock" />}
+          left={(props) => <List.Icon {...props} icon="shield" />}
           onPress={() => {}}
         />
 
@@ -115,7 +115,7 @@ export const ProfileScreen: React.FC = () => {
 
         <List.Item
           title="帮助中心"
-          left={(props) => <List.Icon {...props} icon="help-circle" />}
+          left={(props) => <List.Icon {...props} icon="help" />}
           onPress={() => {}}
         />
 
