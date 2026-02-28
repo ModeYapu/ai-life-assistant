@@ -10,7 +10,6 @@ import {
   TextInput,
   TouchableOpacity,
   Alert,
-  Platform,
 } from 'react-native';
 import {
   Text,
@@ -18,22 +17,23 @@ import {
   RadioButton,
   Chip,
   IconButton,
+  Menu,
+  Divider,
 } from 'react-native-paper';
-import DateTimePicker from '@react-native-community/datetimepicker';
 import { useSelector, useDispatch } from 'react-redux';
 import { useNavigation, useRoute } from '@react-navigation/native';
 import { RootState } from '../store';
 import { createTask, updateTask } from '../store/slices/tasksSlice';
 import { Task, TaskPriority, TaskStatus } from '../types';
-import { format } from 'date-fns';
+import { format, addDays, addHours, startOfTomorrow, startOfWeek, endOfWeek } from 'date-fns';
 
 export const TaskDetailScreen: React.FC = () => {
   const navigation = useNavigation();
   const route = useRoute();
-  const dispatch = useDispatch();
+  const dispatch = useDispatch<any>();
   const { taskId } = route.params as { taskId: string };
   const { tasks } = useSelector((state: RootState) => state.tasks);
-  
+
   const isNewTask = taskId === 'new';
   const existingTask = tasks.find(t => t.id === taskId);
 
@@ -42,7 +42,7 @@ export const TaskDetailScreen: React.FC = () => {
   const [priority, setPriority] = useState<TaskPriority>('medium');
   const [status, setStatus] = useState<TaskStatus>('pending');
   const [dueDate, setDueDate] = useState<number | undefined>();
-  const [showDatePicker, setShowDatePicker] = useState(false);
+  const [showDateMenu, setShowDateMenu] = useState(false);
   const [tags, setTags] = useState<string[]>([]);
   const [newTag, setNewTag] = useState('');
 
@@ -90,6 +90,24 @@ export const TaskDetailScreen: React.FC = () => {
 
   const handleRemoveTag = (tagToRemove: string) => {
     setTags(tags.filter(tag => tag !== tagToRemove));
+  };
+
+  // 快捷日期选项
+  const dateOptions = [
+    { label: '今天', value: Date.now() },
+    { label: '明天', value: startOfTomorrow().getTime() },
+    { label: '后天', value: addDays(Date.now(), 2).getTime() },
+    { label: '本周五', value: addDays(startOfWeek(Date.now(), { weekStartsOn: 1 }), 4).getTime() },
+    { label: '下周一', value: addDays(endOfWeek(Date.now(), { weekStartsOn: 1 }), 1).getTime() },
+    { label: '一周后', value: addDays(Date.now(), 7).getTime() },
+  ];
+
+  const handleDateSelect = (timestamp: number) => {
+    // 设置为当天 18:00
+    const date = new Date(timestamp);
+    date.setHours(18, 0, 0, 0);
+    setDueDate(date.getTime());
+    setShowDateMenu(false);
   };
 
   const priorityColors = {
@@ -178,28 +196,31 @@ export const TaskDetailScreen: React.FC = () => {
       {/* 截止日期 */}
       <View style={styles.section}>
         <Text style={styles.label}>截止日期</Text>
-        <TouchableOpacity
-          style={styles.dateButton}
-          onPress={() => setShowDatePicker(true)}
+        <Menu
+          visible={showDateMenu}
+          onDismiss={() => setShowDateMenu(false)}
+          anchor={
+            <TouchableOpacity
+              style={styles.dateButton}
+              onPress={() => setShowDateMenu(true)}
+            >
+              <Text>
+                {dueDate ? format(dueDate, 'yyyy-MM-dd HH:mm') : '点击选择截止日期'}
+              </Text>
+              <IconButton icon="calendar" />
+            </TouchableOpacity>
+          }
         >
-          <Text>
-            {dueDate ? format(dueDate, 'yyyy-MM-dd HH:mm') : '点击选择日期时间'}
-          </Text>
-          <IconButton icon="calendar" />
-        </TouchableOpacity>
-        {showDatePicker && (
-          <DateTimePicker
-            value={dueDate ? new Date(dueDate) : new Date()}
-            mode="datetime"
-            display={Platform.OS === 'ios' ? 'spinner' : 'default'}
-            onChange={(event, selectedDate) => {
-              setShowDatePicker(false);
-              if (selectedDate) {
-                setDueDate(selectedDate.getTime());
-              }
-            }}
-          />
-        )}
+          {dateOptions.map((option, index) => (
+            <View key={option.label}>
+              <Menu.Item
+                onPress={() => handleDateSelect(option.value)}
+                title={`${option.label} (${format(option.value, 'MM-dd')})`}
+              />
+              {index < dateOptions.length - 1 && <Divider />}
+            </View>
+          ))}
+        </Menu>
         {dueDate && (
           <Button
             mode="text"
