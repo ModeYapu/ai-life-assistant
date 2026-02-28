@@ -94,6 +94,11 @@ export function AppNavigator() {
           component={MemoryManagerScreen}
           options={{ title: '记忆管理' }}
         />
+        <Stack.Screen 
+          name="CodePlan" 
+          component={CodePlanScreen}
+          options={{ title: '代码规划' }}
+        />
       </Stack.Navigator>
     </NavigationContainer>
   );

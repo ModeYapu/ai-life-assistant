@@ -112,7 +112,6 @@ export interface User {
   email: string;
   avatar?: string;
   preferences: UserPreferences;
-  subscription: Subscription;
   createdAt: number;
   updatedAt: number;
 }
@@ -121,6 +120,7 @@ export interface UserPreferences {
   theme: 'light' | 'dark' | 'auto';
   language: string;
   aiModel: string;
+  codePlanEnabled: boolean; // 启用代码规划
   notifications: {
     tasks: boolean;
     reminders: boolean;
@@ -130,13 +130,6 @@ export interface UserPreferences {
     analytics: boolean;
     crashReports: boolean;
   };
-}
-
-export interface Subscription {
-  plan: 'free' | 'pro' | 'enterprise';
-  startDate?: number;
-  endDate?: number;
-  features: string[];
 }
 
 // ============ 设置相关类型 ============

@@ -40,7 +40,8 @@ export const login = createAsyncThunk(
         preferences: {
           theme: 'auto',
           language: 'zh-CN',
-          aiModel: 'claude-3-5-sonnet',
+          aiModel: 'claude-3.7-sonnet',
+          codePlanEnabled: false,
           notifications: {
             tasks: true,
             reminders: true,
@@ -50,10 +51,6 @@ export const login = createAsyncThunk(
             analytics: true,
             crashReports: true,
           },
-        },
-        subscription: {
-          plan: 'free',
-          features: ['basic_chat', 'task_management'],
         },
         createdAt: Date.now(),
         updatedAt: Date.now(),
