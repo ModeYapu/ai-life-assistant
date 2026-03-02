@@ -2,43 +2,132 @@
  * AI服务 - 支持多模型切换
  */
 
-import { AIRequest, ApiResponse } from '../types';
+import { AIRequest } from '../types';
+import { agentConfig, agentKernel, agentObservability } from './agent';
+import { AgentStage } from './agent/types';
+import { DynamicExtractor } from './webContentService';
 
-interface AIMessageResponse {
+export interface AIMessageResponse {
   content: string;
   tokens?: number;
   latency?: number;
+  agent?: {
+    runId: string;
+    mode: 'single' | 'planner' | 'multi-agent';
+    stage: AgentStage;
+    memoryHits: number;
+    toolCalls: number;
+    safetyBlocked: boolean;
+    webExtractions?: Array<{
+      url: string;
+      ok: boolean;
+      mode?: 'static' | 'dynamic';
+      textLength: number;
+      finalUrl?: string;
+      errorCode?: string;
+      message?: string;
+    }>;
+    toolLoopUsed?: boolean;
+    toolCallRaw?: string;
+  };
 }
 
 class AIService {
   apiKeys: Record<string, string> = {};
+  dynamicExtractor?: DynamicExtractor;
+  private static readonly E2E_MOCK_TOKEN = '[E2E_MOCK_AI]';
 
   setApiKey(provider: string, key: string) {
     this.apiKeys[provider] = key;
   }
 
-  async sendMessage(request: AIRequest): Promise<AIMessageResponse> {
-    const startTime = Date.now();
+  setAgentEnabled(enabled: boolean) {
+    agentConfig.setEnabled(enabled);
+  }
 
+  setAgentStage(stage: AgentStage) {
+    agentConfig.setStage(stage);
+  }
+
+  getAgentState() {
+    const cfg = agentConfig.get();
+    const metrics = agentObservability.getMetrics();
+    const last = agentObservability.last();
+    return {
+      enabled: cfg.enabled,
+      stage: cfg.stage,
+      lastRunId: last?.runId,
+      lastMode: last?.mode,
+      ...metrics,
+    };
+  }
+
+  setDynamicExtractor(extractor?: DynamicExtractor) {
+    this.dynamicExtractor = extractor;
+  }
+
+  async sendMessage(request: AIRequest, options?: { conversationId?: string }): Promise<AIMessageResponse> {
     try {
-      // 根据模型选择不同的API
-      if (request.model.startsWith('gpt') || request.model.startsWith('o3')) {
-        return await this.callOpenAI(request, startTime);
-      } else if (request.model.startsWith('claude')) {
-        return await this.callAnthropic(request, startTime);
-      } else if (request.model.startsWith('gemini')) {
-        return await this.callGoogle(request, startTime);
-      } else if (request.model.startsWith('glm')) {
-        return await this.callZhipu(request, startTime);
-      } else if (request.model.includes('local')) {
-        return await this.callLocalModel(request, startTime);
-      } else {
-        throw new Error(`Unsupported model: ${request.model}`);
-      }
+      const result = await agentKernel.run({
+        request,
+        conversationId: options?.conversationId,
+        dynamicExtractor: this.dynamicExtractor,
+        executeModel: async (finalRequest) => this.dispatchToProvider(finalRequest),
+      });
+
+      return {
+        ...result.response,
+        agent: {
+          runId: result.trace.runId,
+          mode: result.trace.mode,
+          stage: result.trace.stage,
+          memoryHits: result.trace.memoryHits,
+          toolCalls: result.trace.toolCalls,
+          safetyBlocked: result.trace.safetyBlocked,
+          webExtractions: result.trace.webExtractions,
+          toolLoopUsed: result.trace.toolLoopUsed,
+          toolCallRaw: result.trace.toolCallRaw,
+        },
+      };
     } catch (error: any) {
       console.error('AI Service Error:', error);
       throw error;
     }
+  }
+
+  private async dispatchToProvider(request: AIRequest): Promise<AIMessageResponse> {
+    const startTime = Date.now();
+    if (this.shouldUseE2EMock(request)) {
+      return this.buildE2EMockResponse(request, startTime);
+    }
+    if (request.model.startsWith('gpt') || request.model.startsWith('o3')) {
+      return await this.callOpenAI(request, startTime);
+    } else if (request.model.startsWith('claude')) {
+      return await this.callAnthropic(request, startTime);
+    } else if (request.model.startsWith('gemini')) {
+      return await this.callGoogle(request, startTime);
+    } else if (request.model.startsWith('glm')) {
+      return await this.callZhipu(request, startTime);
+    } else if (request.model.includes('local')) {
+      return await this.callLocalModel(request, startTime);
+    }
+    throw new Error(`Unsupported model: ${request.model}`);
+  }
+
+  private shouldUseE2EMock(request: AIRequest): boolean {
+    if (!(typeof __DEV__ !== 'undefined' && __DEV__)) {
+      return false;
+    }
+    return request.messages.some((m) => (m.content || '').includes(AIService.E2E_MOCK_TOKEN));
+  }
+
+  private buildE2EMockResponse(request: AIRequest, startTime: number): AIMessageResponse {
+    const userText = [...request.messages].reverse().find((m) => m.role === 'user')?.content || '';
+    return {
+      content: `E2E mock response: ${userText.replace(AIService.E2E_MOCK_TOKEN, '').trim() || 'ok'}`,
+      tokens: 16,
+      latency: Date.now() - startTime,
+    };
   }
 
   async callOpenAI(request: AIRequest, startTime: number): Promise<AIMessageResponse> {
@@ -67,9 +156,11 @@ class AIService {
     }
 
     const data = await response.json();
+    const message = data.choices?.[0]?.message || {};
+    const content = message.content || message.reasoning_content || '';
 
     return {
-      content: data.choices[0].message.content,
+      content,
       tokens: data.usage?.total_tokens,
       latency: Date.now() - startTime,
     };

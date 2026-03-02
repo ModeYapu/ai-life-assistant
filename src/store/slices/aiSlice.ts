@@ -5,6 +5,7 @@
 import { createSlice, createAsyncThunk, PayloadAction } from '@reduxjs/toolkit';
 import { AIState, AIMessage, AIConversation } from '../../types';
 import { aiService } from '../../services/aiService';
+import { AgentStage } from '../../services/agent/types';
 
 // 简单的 UUID 生成器（兼容 React Native）
 const generateId = () => {
@@ -125,6 +126,13 @@ const initialState: AIState = {
     },
   ],
   selectedModel: 'glm-5',
+  agent: {
+    enabled: true,
+    stage: 7,
+    totalRuns: 0,
+    toolCalls: 0,
+    safetyBlocks: 0,
+  },
   loading: false,
   error: null,
 };
@@ -164,13 +172,29 @@ export const sendMessage = createAsyncThunk(
         }));
 
       // 调用AI服务
-      const response = await aiService.sendMessage({
-        model: selectedModel,
-        messages: [
-          ...recentMessages,
-          { role: 'user' as const, content: payload.content }
-        ],
-      });
+      const response = await aiService.sendMessage(
+        {
+          model: selectedModel,
+          messages: [
+            ...recentMessages,
+            { role: 'user' as const, content: payload.content }
+          ],
+        },
+        {
+          conversationId: payload.conversationId,
+        }
+      );
+
+      const webExtractions = response.agent?.webExtractions || [];
+      const webSummary = webExtractions.length > 0
+        ? webExtractions
+          .map((item) =>
+            item.ok
+              ? `OK(${item.mode || 'n/a'},len=${item.textLength})`
+              : `FAIL(${item.errorCode || 'UNKNOWN'})`
+          )
+          .join(' | ')
+        : undefined;
 
       const assistantMessage: AIMessage = {
         id: generateId(),
@@ -181,6 +205,18 @@ export const sendMessage = createAsyncThunk(
           model: selectedModel,
           tokens: response.tokens,
           latency: response.latency,
+          agentRunId: response.agent?.runId,
+          agentMode: response.agent?.mode,
+          agentWebExtractionSummary: webSummary,
+          agentWebExtractions: webExtractions.map((item) => ({
+            url: item.url,
+            ok: item.ok,
+            mode: item.mode,
+            textLength: item.textLength,
+            errorCode: item.errorCode,
+          })),
+          agentToolLoopUsed: response.agent?.toolLoopUsed,
+          agentToolCallRaw: response.agent?.toolCallRaw,
         },
       };
 
@@ -188,6 +224,7 @@ export const sendMessage = createAsyncThunk(
         conversationId: payload.conversationId,
         userMessage,
         assistantMessage,
+        agent: response.agent,
       };
     } catch (error: any) {
       console.error('sendMessage error:', error);
@@ -212,6 +249,14 @@ const aiSlice = createSlice({
     },
     setSelectedModel: (state, action: PayloadAction<string>) => {
       state.selectedModel = action.payload;
+    },
+    setAgentEnabled: (state, action: PayloadAction<boolean>) => {
+      state.agent.enabled = action.payload;
+      aiService.setAgentEnabled(action.payload);
+    },
+    setAgentStage: (state, action: PayloadAction<AgentStage>) => {
+      state.agent.stage = action.payload;
+      aiService.setAgentStage(action.payload);
     },
     clearError: (state) => {
       state.error = null;
@@ -245,7 +290,7 @@ const aiSlice = createSlice({
       })
       .addCase(sendMessage.fulfilled, (state, action) => {
         state.loading = false;
-        const { conversationId, userMessage, assistantMessage } = action.payload;
+        const { conversationId, userMessage, assistantMessage, agent } = action.payload;
 
         // 查找或创建对话
         let conversation = state.conversations.find(c => c.id === conversationId);
@@ -273,6 +318,17 @@ const aiSlice = createSlice({
         if (state.currentConversation?.id === conversationId) {
           state.currentConversation = conversation || null;
         }
+
+        if (agent) {
+          state.agent.lastRunId = agent.runId;
+          state.agent.lastMode = agent.mode;
+          state.agent.stage = agent.stage;
+          state.agent.totalRuns += 1;
+          state.agent.toolCalls += agent.toolCalls;
+          if (agent.safetyBlocked) {
+            state.agent.safetyBlocks += 1;
+          }
+        }
       })
       .addCase(sendMessage.rejected, (state, action) => {
         state.loading = false;
@@ -284,6 +340,8 @@ const aiSlice = createSlice({
 export const {
   setCurrentConversation,
   setSelectedModel,
+  setAgentEnabled,
+  setAgentStage,
   clearError,
   deleteConversation,
   createConversation,

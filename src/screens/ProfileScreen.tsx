@@ -139,6 +139,7 @@ export const ProfileScreen: React.FC = () => {
 
         <List.Item
           title="设置"
+          testID="profile-settings-entry"
           left={(props) => <List.Icon {...props} icon="cog" />}
           onPress={() => navigation.navigate('Settings' as never)}
         />

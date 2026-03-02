@@ -34,7 +34,7 @@ yarn-error.log*
 coverage/
 .nyc_output/
 android/.gradle-detox/
-
+.gradle-detox/
 # Misc
 *.bak
 *.tmp

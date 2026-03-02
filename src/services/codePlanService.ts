@@ -3,7 +3,7 @@
  * 使用AI自动规划代码实现步骤
  */
 
-import { AIService } from './aiService';
+import { aiService } from './aiService';
 import { AIModelConfig } from '../config/aiModels';
 
 interface CodePlanStep {
@@ -23,12 +23,6 @@ interface CodePlan {
 }
 
 class CodePlanService {
-  private aiService: AIService;
-
-  constructor() {
-    this.aiService = new AIService();
-  }
-
   /**
    * 生成代码规划
    */
@@ -68,7 +62,7 @@ Format your response as JSON:
 `;
 
     try {
-      const response = await this.aiService.sendMessage({
+      const response = await aiService.sendMessage({
         model: model.id,
         messages: [{ role: 'user', content: prompt }],
         temperature: 0.7,
@@ -79,7 +73,10 @@ Format your response as JSON:
       const plan = this.parsePlanResponse(response.content);
       return {
         task,
-        ...plan,
+        steps: plan.steps || [],
+        total_steps: plan.total_steps || 0,
+        estimated_time: plan.estimated_time || 'N/A',
+        dependencies: plan.dependencies || [],
       };
     } catch (error) {
       console.error('Failed to generate code plan:', error);
@@ -107,7 +104,7 @@ Please implement this step. Provide:
 3. Error handling where appropriate
 `;
 
-    const response = await this.aiService.sendMessage({
+    const response = await aiService.sendMessage({
       model: model.id,
       messages: [{ role: 'user', content: prompt }],
       temperature: 0.7,
@@ -171,7 +168,7 @@ Please optimize the plan based on the feedback. Consider:
 Provide the optimized plan in the same JSON format.
 `;
 
-    const response = await this.aiService.sendMessage({
+    const response = await aiService.sendMessage({
       model: model.id,
       messages: [{ role: 'user', content: prompt }],
       temperature: 0.7,
@@ -181,7 +178,10 @@ Provide the optimized plan in the same JSON format.
     const optimizedPlan = this.parsePlanResponse(response.content);
     return {
       task: plan.task,
-      ...optimizedPlan,
+      steps: optimizedPlan.steps || plan.steps,
+      total_steps: optimizedPlan.total_steps || plan.total_steps,
+      estimated_time: optimizedPlan.estimated_time || plan.estimated_time,
+      dependencies: optimizedPlan.dependencies || plan.dependencies,
     };
   }
 }

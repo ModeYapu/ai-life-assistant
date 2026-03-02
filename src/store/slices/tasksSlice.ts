@@ -2,7 +2,7 @@
  * 任务状态管理
  */
 
-import { createSlice, createAsyncThunk, PayloadAction } from '@reduxjs/toolkit';
+import { createSlice, createAsyncThunk, PayloadAction, createSelector } from '@reduxjs/toolkit';
 import { TasksState, Task, TaskFilter } from '../../types';
 import { storageService } from '../../services/storageService';
 
@@ -148,21 +148,33 @@ const tasksSlice = createSlice({
 export const { setSelectedTask, setFilter, clearError } = tasksSlice.actions;
 
 // Selectors
-export const selectFilteredTasks = (state: { tasks: TasksState }) => {
-  const { tasks, filter } = state.tasks;
-  
-  return tasks.filter(task => {
-    if (filter.status && !filter.status.includes(task.status)) return false;
-    if (filter.priority && !filter.priority.includes(task.priority)) return false;
-    if (filter.tags && filter.tags.length > 0) {
-      if (!task.tags.some(tag => filter.tags!.includes(tag))) return false;
+const selectTasksState = (state: { tasks: TasksState }) => state.tasks;
+
+export const selectFilteredTasks = createSelector(
+  [selectTasksState],
+  ({ tasks, filter }) => {
+    const hasStatusFilter = !!filter.status && filter.status.length > 0;
+    const hasPriorityFilter = !!filter.priority && filter.priority.length > 0;
+    const hasTagsFilter = !!filter.tags && filter.tags.length > 0;
+    const hasDueDateFilter = !!filter.dueDate && (!!filter.dueDate.start || !!filter.dueDate.end);
+
+    if (!hasStatusFilter && !hasPriorityFilter && !hasTagsFilter && !hasDueDateFilter) {
+      return tasks;
     }
-    if (filter.dueDate) {
-      if (filter.dueDate.start && task.dueDate && task.dueDate < filter.dueDate.start) return false;
-      if (filter.dueDate.end && task.dueDate && task.dueDate > filter.dueDate.end) return false;
-    }
-    return true;
-  });
-};
+
+    return tasks.filter(task => {
+      if (filter.status && !filter.status.includes(task.status)) return false;
+      if (filter.priority && !filter.priority.includes(task.priority)) return false;
+      if (filter.tags && filter.tags.length > 0) {
+        if (!task.tags.some(tag => filter.tags!.includes(tag))) return false;
+      }
+      if (filter.dueDate) {
+        if (filter.dueDate.start && task.dueDate && task.dueDate < filter.dueDate.start) return false;
+        if (filter.dueDate.end && task.dueDate && task.dueDate > filter.dueDate.end) return false;
+      }
+      return true;
+    });
+  }
+);
 
 export default tasksSlice.reducer;

@@ -23,13 +23,13 @@ type NavigationProp = StackNavigationProp<any>;
 
 export const TasksScreen: React.FC = () => {
   const navigation = useNavigation<NavigationProp>();
-  const dispatch = useDispatch();
+  const dispatch = useDispatch<any>();
   const { loading, filter } = useSelector((state: RootState) => state.tasks);
   const tasks = useSelector(selectFilteredTasks);
 
   useEffect(() => {
     dispatch(loadTasks());
-  }, []);
+  }, [dispatch]);
 
   const handleToggleComplete = async (task: Task) => {
     const updatedTask = {
@@ -61,7 +61,7 @@ export const TasksScreen: React.FC = () => {
   };
 
   const renderTask = ({ item }: { item: Task }) => {
-    const isOverdue = item.dueDate && item.dueDate < Date.now() && item.status !== 'completed';
+    const isOverdue = !!item.dueDate && item.dueDate < Date.now() && item.status !== 'completed';
     
     return (
       <Card
@@ -137,7 +137,9 @@ export const TasksScreen: React.FC = () => {
         refreshControl={
           <RefreshControl
             refreshing={loading}
-            onRefresh={() => dispatch(loadTasks())}
+            onRefresh={() => {
+              dispatch(loadTasks());
+            }}
           />
         }
         ListEmptyComponent={

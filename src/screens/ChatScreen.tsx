@@ -20,14 +20,17 @@ import { useSelector, useDispatch } from 'react-redux';
 import { RootState } from '../store';
 import { sendMessage, createConversation, clearError } from '../store/slices/aiSlice';
 import { AIMessage } from '../types';
+import { aiService } from '@services/aiService';
+import { WebViewContentExtractor, WebViewContentExtractorRef } from '@components/WebViewContentExtractor';
 
 export const ChatScreen: React.FC = () => {
   const [inputText, setInputText] = useState('');
-  const dispatch = useDispatch();
-  const { currentConversation, loading, selectedModel, error } = useSelector(
+  const dispatch = useDispatch<any>();
+  const { currentConversation, loading, selectedModel, error, agent } = useSelector(
     (state: RootState) => state.ai
   );
   const flatListRef = React.useRef<FlatList>(null);
+  const webExtractorRef = React.useRef<WebViewContentExtractorRef>(null);
 
   // 创建对话
   useEffect(() => {
@@ -45,6 +48,18 @@ export const ChatScreen: React.FC = () => {
       ]);
     }
   }, [error, dispatch]);
+
+  useEffect(() => {
+    aiService.setDynamicExtractor((request) => {
+      if (!webExtractorRef.current) {
+        throw new Error('Dynamic extractor is not ready');
+      }
+      return webExtractorRef.current.extract(request);
+    });
+    return () => {
+      aiService.setDynamicExtractor(undefined);
+    };
+  }, []);
 
   const handleSend = useCallback(() => {
     console.log('handleSend called', { inputText: inputText.trim(), currentConversation: !!currentConversation, loading });
@@ -80,7 +95,7 @@ export const ChatScreen: React.FC = () => {
       setTimeout(() => {
         flatListRef.current?.scrollToEnd();
       }, 100);
-    }).catch((err) => {
+    }).catch((err: any) => {
       console.error('Send message error:', err);
     });
   }, [inputText, currentConversation, loading, dispatch]);
@@ -105,9 +120,31 @@ export const ChatScreen: React.FC = () => {
             {item.content}
           </Text>
           {item.metadata && (
-            <Text style={styles.metadata}>
-              {item.metadata.model} · {item.metadata.tokens} tokens · {item.metadata.latency}ms
-            </Text>
+            <>
+              <Text style={styles.metadata}>
+                {item.metadata.model} · {item.metadata.tokens} tokens · {item.metadata.latency}ms
+              </Text>
+              {!!item.metadata.agentWebExtractionSummary && (
+                <Text style={styles.metadata}>
+                  WebExtract: {item.metadata.agentWebExtractionSummary}
+                </Text>
+              )}
+              {!!item.metadata.agentWebExtractions && item.metadata.agentWebExtractions.length > 0 && (
+                <Text style={styles.metadata} numberOfLines={2}>
+                  {item.metadata.agentWebExtractions
+                    .map((it) => `${it.ok ? 'OK' : 'FAIL'} ${it.url}`)
+                    .join(' | ')}
+                </Text>
+              )}
+              {item.metadata.agentToolLoopUsed === true && (
+                <Text style={styles.metadata}>ToolLoop: used</Text>
+              )}
+              {!!item.metadata.agentToolCallRaw && (
+                <Text style={styles.metadata} numberOfLines={2}>
+                  ToolCallRaw: {item.metadata.agentToolCallRaw}
+                </Text>
+              )}
+            </>
           )}
         </View>
       </View>
@@ -126,7 +163,7 @@ export const ChatScreen: React.FC = () => {
     </View>
   );
 
-  const canSend = inputText.trim().length > 0 && currentConversation && !loading;
+  const canSend = inputText.trim().length > 0 && !!currentConversation && !loading;
 
   return (
     <KeyboardAvoidingView
@@ -136,7 +173,13 @@ export const ChatScreen: React.FC = () => {
     >
       {/* 模型选择器 */}
       <View style={styles.modelSelector}>
-        <Text style={styles.modelText}>当前模型: {selectedModel}</Text>
+        <View testID="chat-agent-banner">
+          <Text style={styles.modelText}>当前模型: {selectedModel}</Text>
+          <Text style={styles.agentText}>
+            Agent: {agent.enabled ? `ON · Stage ${agent.stage}` : 'OFF'}
+            {agent.lastMode ? ` · ${agent.lastMode}` : ''}
+          </Text>
+        </View>
         {!currentConversation && (
           <Text style={styles.loadingText}>初始化中...</Text>
         )}
@@ -156,6 +199,7 @@ export const ChatScreen: React.FC = () => {
       {/* 输入框 */}
       <View style={styles.inputContainer}>
         <TextInput
+          testID="chat-input"
           style={styles.input}
           value={inputText}
           onChangeText={setInputText}
@@ -164,6 +208,7 @@ export const ChatScreen: React.FC = () => {
           editable={!loading}
         />
         <TouchableOpacity
+          testID="chat-send-button"
           onPress={handleSend}
           disabled={!canSend}
           style={[
@@ -182,6 +227,7 @@ export const ChatScreen: React.FC = () => {
           />
         )}
       </View>
+      <WebViewContentExtractor ref={webExtractorRef} />
     </KeyboardAvoidingView>
   );
 };
@@ -203,6 +249,11 @@ const styles = StyleSheet.create({
   modelText: {
     fontSize: 12,
     color: '#666',
+  },
+  agentText: {
+    fontSize: 11,
+    color: '#888',
+    marginTop: 2,
   },
   loadingText: {
     fontSize: 12,

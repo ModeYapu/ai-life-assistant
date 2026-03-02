@@ -169,7 +169,7 @@ class StorageService {
   }
 
   // Helper
-  private getDefaultSettings(): AppSettings {
+  getDefaultSettings(): AppSettings {
     return {
       ai: {
         defaultModel: 'claude-3-5-sonnet',
@@ -200,6 +200,15 @@ class StorageService {
       await AsyncStorage.multiRemove(Object.values(this.KEYS));
     } catch (error) {
       console.error('Error clearing data:', error);
+      throw error;
+    }
+  }
+
+  async clearConversations(): Promise<void> {
+    try {
+      await AsyncStorage.removeItem(this.KEYS.CONVERSATIONS);
+    } catch (error) {
+      console.error('Error clearing conversations:', error);
       throw error;
     }
   }

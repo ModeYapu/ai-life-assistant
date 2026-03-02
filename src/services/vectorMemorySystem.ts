@@ -2,8 +2,6 @@
  * 向量记忆系统（轻量级实现）
  */
 
-import { OpenAI } from 'openai';
-
 interface VectorMemory {
   id: string;
   content: string;
@@ -14,14 +12,14 @@ interface VectorMemory {
 
 class VectorMemorySystem {
   private memories: Map<string, VectorMemory> = new Map();
-  private openai: OpenAI | null = null;
   private initialized: boolean = false;
+  private readonly dimension = 128;
 
   /**
    * 初始化（需要API Key）
    */
   async initialize(apiKey: string): Promise<void> {
-    this.openai = new OpenAI({ apiKey });
+    void apiKey;
     this.initialized = true;
   }
 
@@ -29,19 +27,13 @@ class VectorMemorySystem {
    * 添加记忆（生成向量嵌入）
    */
   async addMemory(id: string, content: string, metadata?: any): Promise<void> {
-    if (!this.initialized || !this.openai) {
+    if (!this.initialized) {
       console.warn('VectorMemorySystem not initialized');
       return;
     }
 
     try {
-      // 生成向量嵌入
-      const response = await this.openai.embeddings.create({
-        model: 'text-embedding-3-small',
-        input: content,
-      });
-
-      const embedding = response.data[0].embedding;
+      const embedding = this.generateEmbedding(content);
 
       // 存储
       this.memories.set(id, {
@@ -65,19 +57,13 @@ class VectorMemorySystem {
     score: number;
     metadata?: any;
   }>> {
-    if (!this.initialized || !this.openai) {
+    if (!this.initialized) {
       console.warn('VectorMemorySystem not initialized');
       return [];
     }
 
     try {
-      // 生成查询向量
-      const queryResponse = await this.openai.embeddings.create({
-        model: 'text-embedding-3-small',
-        input: query,
-      });
-
-      const queryEmbedding = queryResponse.data[0].embedding;
+      const queryEmbedding = this.generateEmbedding(query);
 
       // 计算相似度
       const results: Array<{
@@ -106,6 +92,21 @@ class VectorMemorySystem {
       console.error('Failed to search vector memory:', error);
       return [];
     }
+  }
+
+  private generateEmbedding(text: string): number[] {
+    const vector = new Array(this.dimension).fill(0);
+    const normalized = text.toLowerCase().trim();
+
+    for (let i = 0; i < normalized.length; i++) {
+      const code = normalized.charCodeAt(i);
+      vector[code % this.dimension] += 1;
+    }
+
+    const norm = Math.sqrt(vector.reduce((sum, value) => sum + value * value, 0));
+    if (norm === 0) return vector;
+
+    return vector.map((value) => value / norm);
   }
 
   /**

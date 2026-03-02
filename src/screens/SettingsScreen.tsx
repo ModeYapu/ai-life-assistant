@@ -28,14 +28,14 @@ import {
   setTemperature,
   toggleStream,
 } from '../store/slices/settingsSlice';
-import { setSelectedModel } from '../store/slices/aiSlice';
+import { setSelectedModel, setAgentEnabled, setAgentStage } from '../store/slices/aiSlice';
 import { storageService } from '../services/storageService';
 import { aiService } from '../services/aiService';
 
 export const SettingsScreen: React.FC = () => {
-  const dispatch = useDispatch();
+  const dispatch = useDispatch<any>();
   const { settings } = useSelector((state: RootState) => state.settings);
-  const { models, selectedModel } = useSelector((state: RootState) => state.ai);
+  const { models, selectedModel, agent } = useSelector((state: RootState) => state.ai);
   
   const [showModelDialog, setShowModelDialog] = useState(false);
   const [showApiKeysDialog, setShowApiKeysDialog] = useState(false);
@@ -147,9 +147,57 @@ export const SettingsScreen: React.FC = () => {
           right={() => (
             <Switch
               value={settings.ai.streamEnabled}
-              onValueChange={() => dispatch(toggleStream())}
+              onValueChange={() => {
+                dispatch(toggleStream());
+              }}
             />
           )}
+        />
+      </List.Section>
+
+      <Divider />
+
+      <List.Section>
+        <List.Subheader>Agent 设置</List.Subheader>
+
+        <List.Item
+          title="启用 Agent Pipeline"
+          description={agent.enabled ? '已开启' : '已关闭'}
+          testID="agent-enabled-item"
+          left={(props) => <List.Icon {...props} icon="robot-outline" />}
+          right={() => (
+            <Switch
+              testID="agent-enabled-switch"
+              value={agent.enabled}
+              onValueChange={(value) => {
+                dispatch(setAgentEnabled(value));
+              }}
+            />
+          )}
+        />
+
+        <View style={styles.settingItem} testID="agent-stage-panel">
+          <Text testID="agent-stage-label">Agent Stage: {agent.stage}</Text>
+          <View style={styles.stageButtons}>
+            {[0, 1, 2, 3, 4, 5, 6, 7].map((stage) => (
+              <Button
+                key={stage}
+                mode={agent.stage === stage ? 'contained' : 'outlined'}
+                compact
+                style={styles.stageBtn}
+                testID={`agent-stage-btn-${stage}`}
+                onPress={() => dispatch(setAgentStage(stage as any))}
+              >
+                {stage}
+              </Button>
+            ))}
+          </View>
+        </View>
+
+        <List.Item
+          title="Agent 运行统计"
+          description={`Runs: ${agent.totalRuns} · Tools: ${agent.toolCalls} · Safety: ${agent.safetyBlocks}`}
+          left={(props) => <List.Icon {...props} icon="chart-line" />}
         />
       </List.Section>
 
@@ -360,5 +408,14 @@ const styles = StyleSheet.create({
   },
   apiKeyInput: {
     marginBottom: 16,
+  },
+  stageButtons: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    marginTop: 8,
+  },
+  stageBtn: {
+    marginRight: 6,
+    marginTop: 6,
   },
 });

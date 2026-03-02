@@ -2,8 +2,9 @@
  * 用户偏好设置状态管理 - 免登录版本
  */
 
-import { createSlice, PayloadAction } from '@reduxjs/toolkit';
+import { createSlice, createAsyncThunk, PayloadAction } from '@reduxjs/toolkit';
 import { UserState } from '../../types';
+import { storageService } from '../../services/storageService';
 
 // 默认偏好设置
 const defaultPreferences = {
@@ -35,6 +36,14 @@ const initialState: UserState = {
   loading: false,
   error: null,
 };
+
+export const loadUser = createAsyncThunk(
+  'user/loadUser',
+  async () => {
+    const storedUser = await storageService.getUser();
+    return storedUser;
+  }
+);
 
 // Slice
 const userSlice = createSlice({
@@ -84,6 +93,24 @@ const userSlice = createSlice({
         state.currentUser.updatedAt = Date.now();
       }
     },
+  },
+  extraReducers: (builder) => {
+    builder
+      .addCase(loadUser.pending, (state) => {
+        state.loading = true;
+        state.error = null;
+      })
+      .addCase(loadUser.fulfilled, (state, action) => {
+        state.loading = false;
+        if (action.payload) {
+          state.currentUser = action.payload;
+          state.isAuthenticated = true;
+        }
+      })
+      .addCase(loadUser.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.error.message || 'Failed to load user';
+      });
   },
 });
 

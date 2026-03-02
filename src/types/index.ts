@@ -30,6 +30,19 @@ export interface AIMessage {
     model?: string;
     tokens?: number;
     latency?: number;
+    important?: boolean;
+    agentRunId?: string;
+    agentMode?: string;
+    agentWebExtractionSummary?: string;
+    agentWebExtractions?: Array<{
+      url: string;
+      ok: boolean;
+      mode?: 'static' | 'dynamic';
+      textLength: number;
+      errorCode?: string;
+    }>;
+    agentToolLoopUsed?: boolean;
+    agentToolCallRaw?: string;
   };
 }
 
@@ -48,7 +61,7 @@ export interface AIConversation {
 export interface AIModel {
   id: string;
   name: string;
-  provider: 'openai' | 'anthropic' | 'google' | 'local';
+  provider: 'openai' | 'anthropic' | 'google' | 'zhipu' | 'local';
   type: 'chat' | 'completion' | 'embedding';
   contextWindow: number;
   pricing: {
@@ -166,6 +179,8 @@ export type RootStackParamList = {
   TaskDetail: { taskId: string };
   Settings: undefined;
   Profile: undefined;
+  MemoryManager: undefined;
+  CodePlan: undefined;
 };
 
 export type MainTabParamList = {
@@ -197,6 +212,15 @@ export interface AIState {
   currentConversation: AIConversation | null;
   models: AIModel[];
   selectedModel: string;
+  agent: {
+    enabled: boolean;
+    stage: 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7;
+    lastRunId?: string;
+    lastMode?: 'single' | 'planner' | 'multi-agent';
+    totalRuns: number;
+    toolCalls: number;
+    safetyBlocks: number;
+  };
   loading: boolean;
   error: string | null;
 }
