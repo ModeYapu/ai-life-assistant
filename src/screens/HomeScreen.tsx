@@ -6,10 +6,10 @@ import React from 'react';
 import { View, Text, StyleSheet, ScrollView } from 'react-native';
 import { Card, Title, Paragraph, Button, FAB } from 'react-native-paper';
 import { useNavigation } from '@react-navigation/native';
-import { StackNavigationProp } from '@react-navigation/stack';
-import { RootStackParamList } from '../types';
+import { BottomTabNavigationProp } from '@react-navigation/bottom-tabs';
+import { MainTabParamList } from '../types';
 
-type NavigationProp = StackNavigationProp<RootStackParamList>;
+type NavigationProp = BottomTabNavigationProp<MainTabParamList>;
 
 export const HomeScreen: React.FC = () => {
   const navigation = useNavigation<NavigationProp>();
@@ -28,7 +28,7 @@ export const HomeScreen: React.FC = () => {
             <Paragraph>与AI助手聊天，获取帮助和建议</Paragraph>
           </Card.Content>
           <Card.Actions>
-            <Button onPress={() => navigation.navigate('Main')}>
+            <Button onPress={() => navigation.navigate('Chat')}>
               开始对话
             </Button>
           </Card.Actions>
@@ -40,7 +40,7 @@ export const HomeScreen: React.FC = () => {
             <Paragraph>管理您的待办事项，设置提醒</Paragraph>
           </Card.Content>
           <Card.Actions>
-            <Button onPress={() => navigation.navigate('Main')}>
+            <Button onPress={() => navigation.navigate('Tasks')}>
               查看任务
             </Button>
           </Card.Actions>

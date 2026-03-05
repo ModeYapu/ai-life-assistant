@@ -2,10 +2,18 @@
  * 任务状态管理
  */
 
-import { createSlice, createAsyncThunk, PayloadAction } from '@reduxjs/toolkit';
+import { createSlice, createAsyncThunk, PayloadAction, createSelector } from '@reduxjs/toolkit';
 import { TasksState, Task, TaskFilter } from '../../types';
 import { storageService } from '../../services/storageService';
-import { v4 as uuidv4 } from 'uuid';
+
+// 简单的 UUID 生成器（兼容 React Native）
+const generateId = () => {
+  return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, (c) => {
+    const r = (Math.random() * 16) | 0;
+    const v = c === 'x' ? r : (r & 0x3) | 0x8;
+    return v.toString(16);
+  });
+};
 
 const initialState: TasksState = {
   tasks: [],
@@ -33,7 +41,7 @@ export const createTask = createAsyncThunk(
   async (taskData: Partial<Task>, { rejectWithValue }) => {
     try {
       const task: Task = {
-        id: uuidv4(),
+        id: generateId(),
         title: taskData.title || '新任务',
         description: taskData.description,
         status: 'pending',
@@ -140,21 +148,33 @@ const tasksSlice = createSlice({
 export const { setSelectedTask, setFilter, clearError } = tasksSlice.actions;
 
 // Selectors
-export const selectFilteredTasks = (state: { tasks: TasksState }) => {
-  const { tasks, filter } = state.tasks;
-  
-  return tasks.filter(task => {
-    if (filter.status && !filter.status.includes(task.status)) return false;
-    if (filter.priority && !filter.priority.includes(task.priority)) return false;
-    if (filter.tags && filter.tags.length > 0) {
-      if (!task.tags.some(tag => filter.tags!.includes(tag))) return false;
+const selectTasksState = (state: { tasks: TasksState }) => state.tasks;
+
+export const selectFilteredTasks = createSelector(
+  [selectTasksState],
+  ({ tasks, filter }) => {
+    const hasStatusFilter = !!filter.status && filter.status.length > 0;
+    const hasPriorityFilter = !!filter.priority && filter.priority.length > 0;
+    const hasTagsFilter = !!filter.tags && filter.tags.length > 0;
+    const hasDueDateFilter = !!filter.dueDate && (!!filter.dueDate.start || !!filter.dueDate.end);
+
+    if (!hasStatusFilter && !hasPriorityFilter && !hasTagsFilter && !hasDueDateFilter) {
+      return tasks;
     }
-    if (filter.dueDate) {
-      if (filter.dueDate.start && task.dueDate && task.dueDate < filter.dueDate.start) return false;
-      if (filter.dueDate.end && task.dueDate && task.dueDate > filter.dueDate.end) return false;
-    }
-    return true;
-  });
-};
+
+    return tasks.filter(task => {
+      if (filter.status && !filter.status.includes(task.status)) return false;
+      if (filter.priority && !filter.priority.includes(task.priority)) return false;
+      if (filter.tags && filter.tags.length > 0) {
+        if (!task.tags.some(tag => filter.tags!.includes(tag))) return false;
+      }
+      if (filter.dueDate) {
+        if (filter.dueDate.start && task.dueDate && task.dueDate < filter.dueDate.start) return false;
+        if (filter.dueDate.end && task.dueDate && task.dueDate > filter.dueDate.end) return false;
+      }
+      return true;
+    });
+  }
+);
 
 export default tasksSlice.reducer;

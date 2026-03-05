@@ -181,7 +181,7 @@ export const CodePlanScreen: React.FC = () => {
                 title={`步骤 ${step.step}: ${step.action}`}
                 description={step.estimated_time}
                 left={props => (
-                  <List.Icon {...props} icon="numeric-${step.step}-circle" />
+                  <List.Icon {...props} icon={`numeric-${step.step}-circle`} />
                 )}
               >
                 <View style={styles.stepContent}>

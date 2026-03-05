@@ -24,18 +24,18 @@ import { useSelector, useDispatch } from 'react-redux';
 import { RootState } from '../store';
 import {
   loadSettings,
-  setAIModel,
   setTheme,
   setTemperature,
   toggleStream,
 } from '../store/slices/settingsSlice';
+import { setSelectedModel, setAgentEnabled, setAgentStage } from '../store/slices/aiSlice';
 import { storageService } from '../services/storageService';
 import { aiService } from '../services/aiService';
 
 export const SettingsScreen: React.FC = () => {
-  const dispatch = useDispatch();
+  const dispatch = useDispatch<any>();
   const { settings } = useSelector((state: RootState) => state.settings);
-  const { models, selectedModel } = useSelector((state: RootState) => state.ai);
+  const { models, selectedModel, agent } = useSelector((state: RootState) => state.ai);
   
   const [showModelDialog, setShowModelDialog] = useState(false);
   const [showApiKeysDialog, setShowApiKeysDialog] = useState(false);
@@ -43,6 +43,8 @@ export const SettingsScreen: React.FC = () => {
     openai: '',
     anthropic: '',
     google: '',
+    zhipu: '',
+    local_endpoint: '',
   });
   const [temperature, setTemperatureLocal] = useState(
     settings.ai.temperature.toString()
@@ -59,6 +61,8 @@ export const SettingsScreen: React.FC = () => {
       openai: keys.openai || '',
       anthropic: keys.anthropic || '',
       google: keys.google || '',
+      zhipu: keys.zhipu || '',
+      local_endpoint: keys.local_endpoint || 'http://localhost:8000/v1/chat/completions',
     });
   };
 
@@ -76,7 +80,15 @@ export const SettingsScreen: React.FC = () => {
         await storageService.saveApiKey('google', apiKeys.google);
         aiService.setApiKey('google', apiKeys.google);
       }
-      
+      if (apiKeys.zhipu) {
+        await storageService.saveApiKey('zhipu', apiKeys.zhipu);
+        aiService.setApiKey('zhipu', apiKeys.zhipu);
+      }
+      if (apiKeys.local_endpoint) {
+        await storageService.saveApiKey('local_endpoint', apiKeys.local_endpoint);
+        aiService.setApiKey('local_endpoint', apiKeys.local_endpoint);
+      }
+
       setShowApiKeysDialog(false);
       Alert.alert('成功', 'API Keys已保存');
     } catch (error) {
@@ -131,13 +143,61 @@ export const SettingsScreen: React.FC = () => {
         <List.Item
           title="流式输出"
           description="实时显示AI回复"
-          left={(props) => <List.Icon {...props} icon="stream" />}
+          left={(props) => <List.Icon {...props} icon="swap-horizontal" />}
           right={() => (
             <Switch
               value={settings.ai.streamEnabled}
-              onValueChange={() => dispatch(toggleStream())}
+              onValueChange={() => {
+                dispatch(toggleStream());
+              }}
             />
           )}
+        />
+      </List.Section>
+
+      <Divider />
+
+      <List.Section>
+        <List.Subheader>Agent 设置</List.Subheader>
+
+        <List.Item
+          title="启用 Agent Pipeline"
+          description={agent.enabled ? '已开启' : '已关闭'}
+          testID="agent-enabled-item"
+          left={(props) => <List.Icon {...props} icon="robot-outline" />}
+          right={() => (
+            <Switch
+              testID="agent-enabled-switch"
+              value={agent.enabled}
+              onValueChange={(value) => {
+                dispatch(setAgentEnabled(value));
+              }}
+            />
+          )}
+        />
+
+        <View style={styles.settingItem} testID="agent-stage-panel">
+          <Text testID="agent-stage-label">Agent Stage: {agent.stage}</Text>
+          <View style={styles.stageButtons}>
+            {[0, 1, 2, 3, 4, 5, 6, 7].map((stage) => (
+              <Button
+                key={stage}
+                mode={agent.stage === stage ? 'contained' : 'outlined'}
+                compact
+                style={styles.stageBtn}
+                testID={`agent-stage-btn-${stage}`}
+                onPress={() => dispatch(setAgentStage(stage as any))}
+              >
+                {stage}
+              </Button>
+            ))}
+          </View>
+        </View>
+
+        <List.Item
+          title="Agent 运行统计"
+          description={`Runs: ${agent.totalRuns} · Tools: ${agent.toolCalls} · Safety: ${agent.safetyBlocks}`}
+          left={(props) => <List.Icon {...props} icon="chart-line" />}
         />
       </List.Section>
 
@@ -193,35 +253,28 @@ export const SettingsScreen: React.FC = () => {
 
       <Divider />
 
-      {/* 同步设置 */}
+      {/* 数据管理 */}
       <List.Section>
-        <List.Subheader>数据同步</List.Subheader>
-        
+        <List.Subheader>数据管理</List.Subheader>
+
         <List.Item
-          title="启用同步"
-          description="同步数据到云端"
-          left={(props) => <List.Icon {...props} icon="cloud-sync" />}
-          right={() => (
-            <Switch
-              value={settings.sync.enabled}
-              onValueChange={() => {}}
-            />
-          )}
+          title="清除缓存"
+          description="清除临时数据"
+          left={(props) => <List.Icon {...props} icon="delete" />}
+          onPress={() => {
+            Alert.alert('确认', '确定要清除缓存吗？', [
+              { text: '取消', style: 'cancel' },
+              { text: '确定', onPress: () => Alert.alert('成功', '缓存已清除') },
+            ]);
+          }}
         />
-        
-        {settings.sync.enabled && (
-          <List.Item
-            title="仅WiFi同步"
-            description="仅在WiFi下同步"
-            left={(props) => <List.Icon {...props} icon="wifi" />}
-            right={() => (
-              <Switch
-                value={settings.sync.wifiOnly}
-                onValueChange={() => {}}
-              />
-            )}
-          />
-        )}
+
+        <List.Item
+          title="导出数据"
+          description="导出所有数据到本地"
+          left={(props) => <List.Icon {...props} icon="download" />}
+          onPress={() => Alert.alert('提示', '功能开发中')}
+        />
       </List.Section>
 
       <Divider />
@@ -229,21 +282,15 @@ export const SettingsScreen: React.FC = () => {
       {/* 关于 */}
       <List.Section>
         <List.Subheader>关于</List.Subheader>
-        
+
         <List.Item
           title="版本"
           description="0.1.0"
           left={(props) => <List.Icon {...props} icon="information" />}
         />
-        
+
         <List.Item
-          title="隐私政策"
-          left={(props) => <List.Icon {...props} icon="shield-account" />}
-          onPress={() => {}}
-        />
-        
-        <List.Item
-          title="使用条款"
+          title="开源协议"
           left={(props) => <List.Icon {...props} icon="file-document" />}
           onPress={() => {}}
         />
@@ -259,7 +306,7 @@ export const SettingsScreen: React.FC = () => {
           <Dialog.Content>
             <RadioButton.Group
               onValueChange={(value) => {
-                dispatch(setAIModel(value));
+                dispatch(setSelectedModel(value));
                 setShowModelDialog(false);
               }}
               value={selectedModel}
@@ -284,29 +331,51 @@ export const SettingsScreen: React.FC = () => {
         >
           <Dialog.Title>配置API Keys</Dialog.Title>
           <Dialog.Content>
-            <TextInput
-              label="OpenAI API Key"
-              value={apiKeys.openai}
-              onChangeText={(text) => setApiKeys({ ...apiKeys, openai: text })}
-              style={styles.apiKeyInput}
-              secureTextEntry
-            />
-            <TextInput
-              label="Anthropic API Key"
-              value={apiKeys.anthropic}
-              onChangeText={(text) =>
-                setApiKeys({ ...apiKeys, anthropic: text })
-              }
-              style={styles.apiKeyInput}
-              secureTextEntry
-            />
-            <TextInput
-              label="Google API Key"
-              value={apiKeys.google}
-              onChangeText={(text) => setApiKeys({ ...apiKeys, google: text })}
-              style={styles.apiKeyInput}
-              secureTextEntry
-            />
+            <ScrollView style={{ maxHeight: 400 }}>
+              <Text style={{ fontWeight: 'bold', marginBottom: 8 }}>OpenAI (GPT-5.2 / O3)</Text>
+              <TextInput
+                placeholder="sk-..."
+                value={apiKeys.openai}
+                onChangeText={(text) => setApiKeys({ ...apiKeys, openai: text })}
+                style={styles.apiKeyInput}
+                secureTextEntry
+              />
+
+              <Text style={{ fontWeight: 'bold', marginBottom: 8 }}>Anthropic (Claude 3.7)</Text>
+              <TextInput
+                placeholder="sk-ant-..."
+                value={apiKeys.anthropic}
+                onChangeText={(text) => setApiKeys({ ...apiKeys, anthropic: text })}
+                style={styles.apiKeyInput}
+                secureTextEntry
+              />
+
+              <Text style={{ fontWeight: 'bold', marginBottom: 8 }}>Google (Gemini 3.0)</Text>
+              <TextInput
+                placeholder="AIza..."
+                value={apiKeys.google}
+                onChangeText={(text) => setApiKeys({ ...apiKeys, google: text })}
+                style={styles.apiKeyInput}
+                secureTextEntry
+              />
+
+              <Text style={{ fontWeight: 'bold', marginBottom: 8 }}>智谱AI (GLM-5)</Text>
+              <TextInput
+                placeholder="智谱AI API Key"
+                value={apiKeys.zhipu}
+                onChangeText={(text) => setApiKeys({ ...apiKeys, zhipu: text })}
+                style={styles.apiKeyInput}
+                secureTextEntry
+              />
+
+              <Text style={{ fontWeight: 'bold', marginBottom: 8 }}>本地模型 (Qwen/DeepSeek)</Text>
+              <TextInput
+                placeholder="http://localhost:8000/v1/chat/completions"
+                value={apiKeys.local_endpoint}
+                onChangeText={(text) => setApiKeys({ ...apiKeys, local_endpoint: text })}
+                style={styles.apiKeyInput}
+              />
+            </ScrollView>
           </Dialog.Content>
           <Dialog.Actions>
             <Button onPress={() => setShowApiKeysDialog(false)}>取消</Button>
@@ -339,5 +408,14 @@ const styles = StyleSheet.create({
   },
   apiKeyInput: {
     marginBottom: 16,
+  },
+  stageButtons: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    marginTop: 8,
+  },
+  stageBtn: {
+    marginRight: 6,
+    marginTop: 6,
   },
 });

@@ -18,7 +18,18 @@
       "Bash(npm install realm@12.3.0 --save-exact)",
       "Bash(git add package.json android/app/build.gradle android/gradle.properties)",
       "Bash(git config --global --list)",
-      "Bash(git config --global --unset http.https://github.com.proxy)"
+      "Bash(git config --global --unset http.https://github.com.proxy)",
+      "Bash(./gradlew.bat clean)",
+      "Bash(git add package.json)",
+      "Bash(npm install @react-native-community/datetimepicker@7.7.0)",
+      "Bash(ls -la \"d:\\\\U_I_U\\\\OOO\\\\ai-life-assistant\\\\src\\\\services\\\\agent\"\" 2>/dev/null || echo \"Directory not found \")",
+      "Bash(npm test -- --testPathPattern=agentKernel)",
+      "Bash(npm install react-dom react-native-web @expo/metro-runtime --save)",
+      "Bash(npm install react-dom@18.2.0 react-native-web@0.19.10 @expo/metro-runtime@0.73.3 --save)",
+      "Bash(npm install react-dom@18.2.0 react-native-web@0.19.10 --save)",
+      "Bash(npm install @callstack/repack webpack webpack-cli webpack-dev-server html-webpack-plugin babel-loader --save-dev)",
+      "Bash(npm install vite @vitejs/plugin-react --save-dev)",
+      "Bash(git add -A)"
     ]
   }
 }

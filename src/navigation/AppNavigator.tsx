@@ -33,11 +33,11 @@ function MainTabs() {
           } else if (route.name === 'Chat') {
             iconName = 'chat';
           } else if (route.name === 'Tasks') {
-            iconName = 'checkbox-marked-circle';
+            iconName = 'checkbox-marked';
           } else if (route.name === 'Profile') {
             iconName = 'account';
           } else {
-            iconName = 'help-circle';
+            iconName = 'help';
           }
 
           return <Icon name={iconName} size={size} color={color} />;

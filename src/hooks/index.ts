@@ -14,7 +14,7 @@ import { loadSettings } from '../store/slices/settingsSlice';
  * 应用初始化Hook
  */
 export const useAppInitialization = () => {
-  const dispatch = useDispatch();
+  const dispatch = useDispatch<any>();
   const [isInitialized, setIsInitialized] = useState(false);
 
   useEffect(() => {
@@ -96,7 +96,6 @@ export const useTaskFilter = () => {
  * AI对话Hook
  */
 export const useAIConversation = (conversationId?: string) => {
-  const dispatch = useDispatch();
   const { conversations, currentConversation, loading, error } = useSelector(
     (state: RootState) => state.ai
   );
