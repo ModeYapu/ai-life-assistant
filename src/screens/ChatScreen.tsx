@@ -99,6 +99,18 @@ export const ChatScreen: React.FC = () => {
         keyExtractor={(item) => item.id}
         contentContainerStyle={styles.messageList}
         onContentSizeChange={() => flatListRef.current?.scrollToEnd()}
+
+        // 性能优化：虚拟化配置
+        windowSize={5}                    // 减少渲染窗口
+        initialNumToRender={10}           // 初始渲染10个
+        maxToRenderPerBatch={10}          // 每批最多10个
+        updateCellsBatchingPeriod={50}    // 批量更新间隔
+        removeClippedSubviews={true}      // 移除屏幕外视图
+
+        // 优化滚动性能
+        showsVerticalScrollIndicator={false}
+        keyboardDismissMode="interactive"
+        keyboardShouldPersistTaps="handled"
       />
 
       {/* 输入框 */}

@@ -134,6 +134,14 @@ export const TasksScreen: React.FC = () => {
         renderItem={renderTask}
         keyExtractor={(item) => item.id}
         contentContainerStyle={styles.list}
+
+        // 性能优化：虚拟化配置
+        windowSize={5}                    // 减少渲染窗口
+        initialNumToRender={10}           // 初始渲染10个
+        maxToRenderPerBatch={10}          // 每批最多10个
+        updateCellsBatchingPeriod={50}    // 批量更新间隔
+        removeClippedSubviews={true}      // 移除屏幕外视图
+
         refreshControl={
           <RefreshControl
             refreshing={loading}

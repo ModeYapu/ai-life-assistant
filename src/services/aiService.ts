@@ -163,9 +163,6 @@ class AIService {
     // 可以使用llama.cpp、onnxruntime等
     throw new Error('Local model not implemented yet');
   }
-}
-
-export const aiService = new AIService();
 
   /**
    * 调用智谱AI (GLM-5)
@@ -207,7 +204,7 @@ export const aiService = new AIService();
   /**
    * 调用本地模型
    */
-  private async callLocalModel(request: AIRequest, startTime: number): Promise<AIMessageResponse> {
+  private async callLocalModelInternal(request: AIRequest, startTime: number): Promise<AIMessageResponse> {
     const endpoint = this.apiKeys['local_endpoint'] || 'http://localhost:8000/v1/chat/completions';
     
     try {
@@ -240,3 +237,5 @@ export const aiService = new AIService();
     }
   }
 }
+
+export const aiService = new AIService();
